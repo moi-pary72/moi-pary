@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f8f9f7"><meta name="description" content="Независимое расписание для студентов: выбор отделения и группы, кабинеты и проверка Excel с Яндекс Диска.">
+<meta name="theme-color" content="#f8f9f7"><meta name="description" content="Независимое расписание для студентов: выбор отделения и группы, кабинеты с ежедневными обновлениями.">
 <title>Мои пары — расписание техникума</title>
 
 <style>
@@ -192,7 +192,7 @@ button:enabled:active{transform:translateY(1px);box-shadow:none}
   <div role="status" aria-live="polite" class="status" id="status">Готовим текущую неделю…</div>
  </section>
  <main class="paper" id="paper" aria-label="Расписание для печати"><div class="paper-head"><div><h2 id="title">Расписание занятий</h2><h3 id="subtitle">Выберите группу</h3><div class="week-meta" id="week">—</div></div><div class="doc-mark">Учебная группа<b id="groupMarker">—</b></div></div><section id="days"></section><div class="paper-key">— кабинет пока не указан в опубликованном расписании. Номера могут уточняться ежедневно.</div><div class="paper-foot"><span>Источник: расписание техникума • <span id="sourceName">—</span></span><span>Сверяйте изменения с официальным источником: <a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" rel="noreferrer" target="_blank">Яндекс Диск</a></span></div></main>
- <div class="help">↻ При входе показывается текущая неделя по времени Тюмени. Следующая доступна отдельно, если техникум её опубликовал. При открытии и по кнопке проверяем Яндекс Диск; кабинеты могут меняться ежедневно. Старые недели не сохраняем. Если проверка не прошла, честно показываем время сохранённой копии.</div>
+ <div class="help">↻ Список групп доступен без сети. При входе и по кнопке загружаем последние обработанные расписания из официальных Excel. Обновление выполняется на GitHub с интервалом около 30 минут, возможны задержки. Кабинеты меняются ежедневно. Старые недели не храним.</div>
  <div class="notice" id="notice">Это независимый проект, а не официальный сервис техникума.</div>
 
  <section class="developer" aria-label="Связь с разработчиком">
@@ -202,202 +202,7 @@ button:enabled:active{transform:translateY(1px);box-shadow:none}
  <footer class="site-bottom">Неофициальный студенческий сервис · Данные из <a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">публичного расписания техникума</a></footer>
 </div>
 
-<script>
-/* «Мои пары» — самостоятельный парсер старых Excel .xls (BIFF8 / OLE2).
-   Без внешних библиотек, аккаунтов, токенов и зависимостей от CDN.
-   Испытан на реальных файлах ИКиМ, ИПиС, ПОиСПА от 09–14.11.2026. */
-(function(global){
-'use strict';
-const OLE_SIG=[0xD0,0xCF,0x11,0xE0,0xA1,0xB1,0x1A,0xE1];
-const DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
-const text16=new TextDecoder('utf-16le');
-const textLatin=new TextDecoder('iso-8859-1');
-function need(ok,message){if(!ok)throw new Error(message||'Повреждённый файл Excel')}
-function binary(buffer){
- const b=buffer instanceof Uint8Array?buffer:new Uint8Array(buffer);
- const dv=new DataView(b.buffer,b.byteOffset,b.byteLength);
- const u16=p=>{need(p>=0&&p+2<=b.length,'Некорректная структура XLS');return dv.getUint16(p,true)};
- const u32=p=>{need(p>=0&&p+4<=b.length,'Некорректная структура XLS');return dv.getUint32(p,true)};
- const float64=p=>{need(p>=0&&p+8<=b.length,'Некорректная структура XLS');return dv.getFloat64(p,true)};
- return {b,dv,u16,u32,float64};
-}
-function concat(chunks){const len=chunks.reduce((s,x)=>s+x.length,0);let dest=new Uint8Array(len),p=0;for(const c of chunks){dest.set(c,p);p+=c.length}return dest}
-function oleWorkbook(bytes){
- const src=binary(bytes), {b,u16,u32}=src;
- need(OLE_SIG.every((c,i)=>b[i]===c),'Получен не XLS: нет заголовка OLE2');
- const sectorSize=2**u16(0x1E),miniSize=2**u16(0x20);
- need([512,4096].includes(sectorSize),'Неподдерживаемый размер сектора XLS');
- need(miniSize===64,'Неподдерживаемый размер мини-сектора XLS');
- const FREE=0xFFFFFFFA, sizeLimit=15_000_000;
- function sector(i){let p=(i+1)*sectorSize;need(i>=0&&p+sectorSize<=b.length,'Повреждённая цепочка XLS');return b.subarray(p,p+sectorSize)}
- let fatSectors=[];
- for(let i=0;i<109;i++)fatSectors.push(u32(0x4C+4*i));
- let nxt=u32(0x44),difCount=u32(0x48);
- for(let i=0;i<difCount;i++){
-  const s=sector(nxt),v=binary(s);for(let j=0;j<sectorSize/4-1;j++)fatSectors.push(v.u32(j*4));
-  nxt=v.u32(sectorSize-4);
- }
- fatSectors=fatSectors.slice(0,u32(0x2C));let fat=[];
- for(const i of fatSectors){if(i<FREE){const s=sector(i),v=binary(s);for(let j=0;j<sectorSize/4;j++)fat.push(v.u32(j*4));}}
- need(fat.length>0,'Таблица секторов XLS не найдена');
- function chain(start){let parts=[],sz=0,seen=new Set(),i=start;
-  while(i<FREE){need(!seen.has(i)&&i<fat.length,'Повреждённая цепочка FAT');seen.add(i);const s=sector(i);parts.push(s);sz+=s.length;need(sz<=sizeLimit,'Слишком большой Excel');i=fat[i]}
-  return concat(parts);
- }
- let directory=chain(u32(0x30)),entries={};
- for(let i=0;i+128<=directory.length;i+=128){const d=binary(directory.subarray(i,i+128));let nameBytes=d.u16(64);if(nameBytes<4||nameBytes>64)continue;
-  let name=text16.decode(d.b.subarray(0,nameBytes-2));
-  if(name)entries[name]={type:d.b[66],start:d.u32(116),size:d.u32(120)};
- }
- const root=entries['Root Entry'];need(root,'Нет главного каталога XLS');
- let miniStream=chain(root.start);let miniFat=[];
- if(u32(0x3C)<FREE&&u32(0x40)>0){const raw=chain(u32(0x3C)),v=binary(raw);for(let i=0;i+4<=raw.length;i+=4)miniFat.push(v.u32(i));}
- function read(name){const e=entries[name];need(e,'Нет потока Workbook в XLS');need(e.size<sizeLimit,'Слишком большой поток Excel');
-  if(e.size>=u32(0x38))return chain(e.start).subarray(0,e.size);
-  let parts=[],len=0,seen=new Set(),i=e.start;
-  while(i<FREE){need(!seen.has(i)&&i<miniFat.length,'Повреждённая цепочка мини-FAT');seen.add(i);let p=i*miniSize;parts.push(miniStream.subarray(p,p+miniSize));len+=miniSize;need(len<=sizeLimit,'Слишком большой Excel');i=miniFat[i]}
-  return concat(parts).subarray(0,e.size);
- }
- return read(entries.Workbook?'Workbook':'Book');
-}
-function records(b,start=0){let v=binary(b),p=start,result=[];
- while(p+4<=b.length){let type=v.u16(p),length=v.u16(p+2);if(p+4+length>b.length)break;result.push({type,raw:b.subarray(p+4,p+4+length),pos:p});p+=4+length}
- return result;
-}
-function biffString(d,pos,count,flags){let n=count*(flags&1?2:1);need(pos+n<=d.length,'Некорректная строка XLS');return(flags&1?text16:textLatin).decode(d.subarray(pos,pos+n))}
-function stringsSST(chunks){if(!chunks.length)return [];
- const b=concat(chunks),v=binary(b),total=v.u32(4),boundaries=[];let offset=0;
- for(const chunk of chunks){offset+=chunk.length;if(offset<b.length)boundaries.push(offset)}
- need(total<=150000,'Слишком много строк XLS');let out=[],p=8;
- for(let idx=0;idx<total;idx++){
-  need(p+3<=b.length,'Обрыв таблицы строк XLS');let chars=v.u16(p),opts=b[p+2];p+=3;
-  let rich=0,ext=0;if(opts&8){rich=v.u16(p);p+=2}if(opts&4){ext=v.u32(p);p+=4}
-  let s='',wide=!!(opts&1),left=chars;
-  while(left>0){let boundary=boundaries.find(x=>x>p)??b.length,unit=wide?2:1;
-   let count=Math.min(left,Math.floor((boundary-p)/unit));
-   if(count>0){let end=p+count*unit;s+=(wide?text16:textLatin).decode(b.subarray(p,end));p=end;left-=count}
-   if(left>0){if(p===boundary&&boundary<b.length){wide=!!(b[p]&1);p++}
-    else if(p<boundary){p=boundary}else throw new Error('Некорректный переход между блоками SST')}
-  }
-  out.push(s);p+=rich*4+ext;
- }
- return out;
-}
-function readXlsSheets(bytes){let raw=oleWorkbook(bytes),recs=records(raw),bounds=[],sst=[],pending=false;
- for(const r of recs){const d=r.raw,v=binary(d);
-  if(r.type===0x85){const off=v.u32(0),size=d[6],flags=d[7];bounds.push({name:biffString(d,8,size,flags),offset:off})}
-  if(r.type===0xFC){sst=[d];pending=true}else if(r.type===0x3C&&pending)sst.push(d);else if(r.type!==0x3C)pending=false;
- }
- const strings=stringsSST(sst);need(bounds.length>0,'Не найдены листы XLS');let sheets=[];
- for(const sh of bounds){const cells=new Map();let height=0,width=0;
-  for(const r of records(raw,sh.offset)){const d=r.raw,t=r.type,v=binary(d);if(t===0x0A)break;
-   if(t===0x200){height=v.u32(4);width=v.u16(10)}
-   if(t===0xFD){let row=v.u16(0),col=v.u16(2),idx=v.u32(6);if(idx<strings.length)cells.set(row+':'+col,strings[idx])}
-   if(t===0x27E||t===0x203){let row=v.u16(0),col=v.u16(2);cells.set(row+':'+col,t===0x203?v.float64(6):decodeRK(v.u32(6)))}
-   if(t===0xBE){let row=v.u16(0),col=v.u16(2);for(let k=0;k<(d.length-6)/6;k++)cells.set(row+':'+(col+k),decodeRK(v.u32(4+6*k)))}
-  }
-  sheets.push({name:sh.name,cells,height,width});
- }
- return sheets;
-}
-function decodeRK(value){let num;if(value&2){num=(value>>2)}else{let bits=new ArrayBuffer(8),dv=new DataView(bits);dv.setUint32(4,value&0xFFFFFFFC,true);num=dv.getFloat64(0,true)}if(value&1)num/=100;return num}
-function clean(x){return typeof x==='string'?x.replace(/\s+/g,' ').trim():''}
-function parseXls(bytes){let groups={},dates=[],days=DAYS;const DAYRE=/(Понедельник|Вторник|Среда|Четверг|Пятница|Пянтица|Суббота)\s+(\d{2}\.\d{2}\.\d{2})/i;
- const TIMERE=/(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})/;
- for(const sh of readXlsSheets(bytes)){
-  let {cells,height,width}=sh,headers=[];
-  const cell=(r,c)=>cells.get(r+':'+c);
-  for(let c=3;c<width;c+=3){let name=clean(cell(0,c));if(name&&!name.startsWith('Фамилия')&&!name.startsWith('Каб')&&/-\d{2}-/.test(name))headers.push([c,name]);}
-  let day='',date='';
-  for(let r=1;r<height;r++){
-   const m=DAYRE.exec(clean(cell(r,0)));
-   if(m){day=m[1].replace('Пянтица','Пятница');day=day[0].toUpperCase()+day.slice(1).toLowerCase();date=m[2];if(!dates.includes(date))dates.push(date)}
-   if(!day)continue;
-   const mt=TIMERE.exec(clean(cell(r,2)));if(!mt)continue;
-   const time=mt[1].padStart(5,'0')+'–'+mt[2].padStart(5,'0');
-   const number=cell(r,1),pair=typeof number==='number'&&Number.isInteger(number)&&number>=1&&number<=15?number:null;
-   for(const [c,g] of headers){let subject=clean(cell(r,c));if(!subject||subject==='.'||subject==='-')continue;
-    let teacher=clean(cell(r,c+1)),room=clean(cell(r,c+2));if(teacher==='.')teacher='';if(room==='.')room='';
-    let dest=groups[g]||(groups[g]={days:Object.fromEntries(days.map(x=>[x,[]]))});
-    dest.days[day].push({date,number:pair,time,subject,teacher,room});
-   }
-  }
- }
- need(Object.keys(groups).length>0,'В Excel не обнаружены группы');
- need(dates.length>=5,'Не найдены даты учебной недели');
- return {groups,dates,format:'xls'};
-}
-const API='https://cloud-api.yandex.net/v1/disk/public/resources';
-const PUBLIC_KEY='https://disk.yandex.ru/d/Xc08g8WbTavdHQ';
-const FILES={'ИКиМ':['ИКИМ','ИКИМЫ'],'ИПиС':['ИПИС'],'ПО и СПА':['ПОИСПА','ПОСПА'],'ЭУиК':['ЭУИК']};
-const DATE_PATTERN=/(\d{1,2})[.\-](\d{1,2})\s*[-–—]\s*(\d{1,2})[.\-](\d{1,2})/;
-function norm(s){return String(s).toUpperCase().replace(/[^А-ЯЁA-Z0-9]/g,'')}
-function dateFromFolder(name,today=new Date()){
- let m=DATE_PATTERN.exec(String(name));if(!m)return null;
- const [d1,m1,d2,m2]=m.slice(1).map(Number);
- let options=[];for(let year=today.getFullYear()-1;year<=today.getFullYear()+1;year++){
-  let start=new Date(year,m1-1,d1);if(start.getDate()===d1&&start.getMonth()===m1-1)options.push(start)
- }
- return options.sort((a,b)=>Math.abs(a-today)-Math.abs(b-today))[0]||null;
-}
-function findFile(items,department){const aliases=FILES[department];need(aliases,'Неизвестное отделение');
- return items.filter(x=>x.type==='file'&&/\.xls$/i.test(x.name||'')&&aliases.some(n=>norm(n)===norm(String(x.name).replace(/\.xls$/i,''))))
-   .sort((a,b)=>String(b.modified||'').localeCompare(String(a.modified||'')))[0]||null;
-}
-async function requestJSON(url,phase){let r;
- try{r=await fetch(url,{cache:'no-store',mode:'cors',credentials:'omit',redirect:'follow'})}
- catch(e){throw new Error(`${phase}: браузер заблокировал запрос или нет сети (возможно, CORS). ${e.message}`)}
- if(!r.ok)throw new Error(`${phase}: Яндекс вернул HTTP ${r.status}`);
- try{return await r.json()}catch{throw new Error(`${phase}: Яндекс вернул ответ не в JSON`)}
-}
-async function list(path){let res=[];
- for(let offset=0;offset<1000;offset+=200){let url=new URL(API);url.searchParams.set('public_key',PUBLIC_KEY);url.searchParams.set('limit','200');url.searchParams.set('offset',String(offset));if(path)url.searchParams.set('path',path);
-  let meta=await requestJSON(url.toString(),'Список папок');
-  if(meta.type!=='dir')throw new Error('Публичная ссылка не содержит папку с расписаниями');
-  let items=meta._embedded?.items||[];res.push(...items);if(!items.length||res.length>=Number(meta._embedded?.total||res.length))break;
- }return res;
-}
-function folderKey(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
-function firstDate(s){const m=String(s).match(/^(\d{2})\.(\d{2})\.(\d{2})$/);if(!m)return null;return new Date(2000+Number(m[3]),Number(m[2])-1,Number(m[1]));}
-async function availableWeekFolders(){
- const root=await list();
- const folders=root.filter(x=>x.type==='dir').map(x=>({file:x,date:dateFromFolder(x.name)})).filter(x=>x.date);
- return {root,folders};
-}
-async function downloadFile(department,found,path,expectedKey,weekName){
- const fpath=(path?path+'/':'/')+found.name;
- const url=new URL(API+'/download');url.searchParams.set('public_key',PUBLIC_KEY);url.searchParams.set('path',fpath);
- const meta=await requestJSON(url.toString(),'Получение ссылки на Excel');
- if(typeof meta.href!=='string'||!meta.href.startsWith('https://'))throw new Error('Яндекс Диск не выдал корректную ссылку на XLS');
- let response;
- try{response=await fetch(meta.href,{cache:'no-store',mode:'cors',credentials:'omit'})}
- catch(e){throw new Error(`Скачивание Excel: браузер не получил файл (возможно, ограничение CORS). ${e.message}`)}
- if(!response.ok)throw new Error(`Скачивание Excel: HTTP ${response.status}`);
- const buf=await response.arrayBuffer();if(buf.byteLength>14_000_000)throw new Error('Excel слишком большой');
- const parsed=parseXls(new Uint8Array(buf));const excelDate=firstDate(parsed.dates[0]);
- if(!excelDate||folderKey(excelDate)!==expectedKey)throw new Error(`В папке «${weekName}» лежит файл с датами ${parsed.dates[0]}–${parsed.dates.at(-1)}, а ожидалась неделя ${expectedKey}. Данные не применены.`);
- return {...parsed,department,week:weekName,file:found.name,source:PUBLIC_KEY,
-  file_modified:found.modified||null,checked_at:new Date().toISOString()};
-}
-async function downloadForWeek(department,expectedKey,lookup){
- let folder=lookup.folders.find(x=>folderKey(x.date)===expectedKey);
- if(folder){
-  let path='/'+folder.file.name.replace(/^\/+|\/+$/g,'');let files=await list(path);let file=findFile(files,department);
-  if(!file)return {availability:'missing-file',message:`В папке «${folder.file.name}» нет Excel отделения ${department}`};
-  return {availability:'ok',data:await downloadFile(department,file,path,expectedKey,folder.file.name)};
- }
- // Some faculties may put a directly-linked XLS in the root. Accept only if its embedded dates match the requested week.
- const direct=findFile(lookup.root,department);
- if(direct){
-  try{return {availability:'ok',data:await downloadFile(department,direct,'',expectedKey,'основная папка')}}
-  catch(e){if(/ожидалась неделя/.test(e.message))return {availability:'not-published',message:'Файл за эту неделю пока не опубликован'};throw e;}
- }
- return {availability:'not-published',message:'Неделя пока не опубликована на Яндекс Диске'};
-}
-global.MoiParyXls={parseXls,downloadForWeek,availableWeekFolders,dateFromFolder,findFile};
-})(typeof globalThis!=='undefined'?globalThis:window);
 
-</script>
 <script>
 'use strict';
 /* «Мои пары» V6: никакого архива недель, только текущая и следующая в локальном хранилище. */
@@ -405,6 +210,8 @@ const DAYS=['Понедельник','Вторник','Среда','Четвер
 const DEPTS=['ИКиМ','ИПиС','ПО и СПА','ЭУиК'];
 const $=id=>document.getElementById(id);
 const STORE='moi-pary-weeks-v6';
+const CATALOG={"ИКиМ":["ДЗ-24-11-1","ДЗ-24-11-2*","ДЗ-24-9-1*","ДЗ-25-11-1","ДЗ-25-11-2","ДЗ-25-9-1","ДЗ-26-11-1","ДЗ-26-11-2","ДЗ-26-9-1","ДЗ-26-9-2","ДЗ-26-9-3","ДПИ-26-9-1","ИФ-24-9-1","ИФ-25-11-1","ИФ-25-9-1","ИФ-26-11-1","ИФ-26-9-1","ИФ-26-9-2","КМТ-24-9-1*","КМТ-24-9-2","КМТ-25-11-1","КМТ-25-9-1","КМТ-26-11-1","КМТ-26-9-1","КМТ-26-9-2","МИШ-25-9-1","МИШ-25-9-2","МИШ-26-11-1","МИШ-26-9-1","МИШ-26-9-2","ОШП-26-9-1","ОШП-26-9-2","ТИК(ПИ)-24-9-3","ТИК(ПИ)-25-11-2","ТИК(ПИ)-25-9-2","ТИК(ПИ)-25-9-3","ТИК(ПИ)-26-11-2","ТИК(ПИ)-26-9-2","ТИК(ЭК)-24-9-1*","ТИК(ЭК)-24-9-2","ТИК(ЭК)-25-11-1","ТИК(ЭК)-25-9-1","ТИК(ЭК)-25-9-4","ТИК(ЭК)-26-11-1","ТИК(ЭК)-26-9-1","ТИК(ЭК)-26-9-3","ХОР-26-9-1"],"ИПиС":["АПП-26-9-1","АПП-26-9-2","АПП-26-9-3","МФС-25-9-1","МФС-26-11-1","МФС-26-9-1","ОБ-25-9-1","ОБ-26-11-1","ОБ-26-9-1","ОБ-26-9-2","ОБ-26-9-3","ОБ-26-9-4","ПК-23-9-1**","ПК-24-9-1*","ПК-25-11-1","ПК-25-9-1","ПК-25-9-2","ПК-26-11-1","ПК-26-9-1","ПК-26-9-2","ПК-26-9-3","ПКД-23-9-1","ПКД-24-11-1**","ПКД-24-11-2**","ПКД-24-9-1*","ПКД-24-9-2*","ПКД-24-9-3","ПКД-24-9-4","ПКД-25-11-1","ПКД-25-11-2","ПКД-25-9-1","ПКД-25-9-2","ПКД-26-11-1","ПКД-26-11-2","ПКД-26-11-3","ПКД-26-9-1","ПКД-26-9-2","ТГ(Г)-25-11-1","ТГ(О)-24-9-1*","ТГ(О)-25-11-2","ТГ(О)-25-9-1","ТГ(О)-25-9-2","ТГ(Э)-25-11-3","ТГ-26-11-1","ТГ-26-11-2","ТГ-26-11-3","ТГ-26-9-1"],"ПО и СПА":["КР-25-1","КР-26-1","ОП-25-1","ОП-25-2","ОП-26-1","П(в)Ш-25-1","ПО-25-1","ПШ-25-1","ШП(в)-25-1"],"ЭУиК":["БУ-24-9-1","БУ-24-9-2*","БУ-25-11-1","БУ-25-11-2","БУ-25-9-1","БУ-26-11-1","БУ-26-9-1","БУ-26-9-2","ГР-23-9-1*","ГР-23-9-2*","ГР-24-9-1","ГР-24-9-2","ГР-25-11-1","ГР-25-11-2","ГР-25-9-1","ГР-26-11-1","ГР-26-9-1","ГР-26-9-2","ДП-26-9-1","ДП-26-9-2","ИСП-24-9-1","ПД-26-9-1","ПД-26-9-2","РМ-24-9-1*","РМ-25-11-1","РМ-25-9-1","РМ-25-9-2","РМ-26-11-1","РМ-26-9-1","РМ-26-9-2","СД-24-9-1*","СД-25-11-1","СД-25-9-1","СД-26-11-1","СД-26-9-1","СД-26-9-2","ТД-24-9-1*","ТД-24-9-2*","ТД-25-11-1","ТД-25-11-2","ТД-25-9-1","ТД-26-11-1","ТД-26-11-2","ТД-26-9-1","ТД-26-9-2"]};
+const HOSTED_URL='./data/schedules.json';
 function get(k){try{return localStorage.getItem(k)}catch{return null}}
 function put(k,v){try{localStorage.setItem(k,v)}catch{}}
 function del(k){try{localStorage.removeItem(k)}catch{}}
@@ -437,7 +244,7 @@ function migrateOld(){for(const dept of DEPTS){const raw=get('moi-pary-data-'+de
  catch{}del('moi-pary-data-'+dept)}put(STORE,JSON.stringify(weekData))}
 prune();migrateOld();prune();
 let dep=get('moi-pary-dept')||'ИКиМ';if(!DEPTS.includes(dep))dep='ИКиМ';
-let group=get('moi-pary-last-'+dep)||get('moi-pary-group')||'ДПИ-26-9-1';
+let group=get('moi-pary-last-'+dep)||(dep==='ИКиМ'?'ДПИ-26-9-1':'');
 let busy=false,lastAttempt=0;
 function entry(department=dep,weekIndex=selectedWeek){return weekData[department]?.[period[weekIndex].key]||null}
 function showWeekTabs(){
@@ -446,16 +253,18 @@ function showWeekTabs(){
   $(i?'datesNext':'datesCurrent').textContent=`${dayMonth(p.start)} — ${dayMonth(addDays(p.start,5))}`;
  }
  const next=entry(dep,1);
- $('weekChoiceNote').textContent=next?'Расписание следующей недели получено. Кабинеты могут появляться постепенно.':'Если следующая неделя ещё не опубликована, покажем это честно. Текущая неделя останется на месте.';
+ $('weekChoiceNote').textContent=next?'Расписание следующей недели получено. Кабинеты могут появляться постепенно.':'Список групп доступен всегда. Расписание появится после получения данных на выбранную неделю.';
 }
 function options(){
+ // The catalog is a fallback list, NEVER a source of current timetable entries.
+ // Fresh weekly data may introduce groups not present in older sample files.
  const cur=entry(dep,0),next=entry(dep,1);
- const groups=[...new Set([...Object.keys(cur?.groups||{}),...Object.keys(next?.groups||{})])].sort((a,b)=>a.localeCompare(b,'ru',{numeric:true}));
- let pick=group;
- if(!pick)pick=groups.includes(get('moi-pary-last-'+dep))?get('moi-pary-last-'+dep):(groups[0]||'');
- const dropdown=$('group');dropdown.innerHTML=groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
- if(pick&&!groups.includes(pick))dropdown.insertAdjacentHTML('afterbegin',`<option value="${esc(pick)}">${esc(pick)} (в источнике пока нет)</option>`);
- dropdown.value=pick;dropdown.disabled=!groups.length;group=pick;
+ const groups=[...new Set([...(CATALOG[dep]||[]),...Object.keys(cur?.groups||{}),...Object.keys(next?.groups||{})])].sort((a,b)=>a.localeCompare(b,'ru',{numeric:true}));
+ const dropdown=$('group');
+ const preferred=get('moi-pary-last-'+dep)||'';
+ const choice=groups.includes(group)?group:(groups.includes(preferred)?preferred:(dep==='ИКиМ'&&groups.includes('ДПИ-26-9-1')?'ДПИ-26-9-1':groups[0]||''));
+ dropdown.innerHTML=groups.map(g=>`<option value="${esc(g)}">${esc(g)}</option>`).join('');
+ dropdown.value=choice;dropdown.disabled=groups.length===0;group=choice;
 }
 function prettyTime(v){if(!v)return 'неизвестно';let t=new Date(v);return Number.isNaN(t.getTime())?'неизвестно':t.toLocaleString('ru-RU',{timeZone:'Asia/Yekaterinburg',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
 function render(){
@@ -463,7 +272,7 @@ function render(){
  $('title').textContent='Расписание занятий';$('subtitle').textContent=dep;
  $('groupMarker').textContent=group||'—';
  $('week').textContent=`Неделя ${datesRU(period[selectedWeek].start)} — ${datesRU(addDays(period[selectedWeek].start,5))}`;
- $('sourceName').textContent=d?.file||'ожидаем публикацию';
+ $('sourceName').textContent=d?.file||'данные ещё не получены';
  let html='';
  if(!d){html=`<div class="empty">${selectedWeek?'Расписание следующей недели пока не получено. Возможно, его ещё не опубликовали.':'Расписание текущей недели пока не загружено.'}<div style="margin-top:7px;font-size:11px">Нажми «Проверить сейчас» или открой официальный Яндекс Диск.</div></div>`}
  else if(!g){html='<div class="empty">В файле этой недели нет выбранной группы. Попробуй проверить расписание или выбрать другую группу.</div>'}
@@ -480,6 +289,8 @@ function render(){
   }html+='</tbody></table></section>';
  }
  $('days').innerHTML=html;
+ $('print').disabled=!g;
+ $('print').title=g?'Сохранить расписание в PDF или распечатать':'Печать доступна после получения расписания';
  if(d?.quality==='pdf_preview_unverified')status('⚠️ Временная копия из PDF. Кабинеты требуют сверки с XLS.','warning');
  else if(lastCheck)status(lastCheck,lastCheckType);
  else if(d?.checked_at)status(`Сохранённая копия этой недели. Последняя успешная проверка: ${prettyTime(d.checked_at)} (Тюмень). Кабинеты могут измениться.`,'warning');
@@ -499,33 +310,39 @@ async function startRefresh(force=false){
  if(busy)return;
  const now=Date.now();if(!force&&now-lastAttempt<60*1000)return;
  rollover();lastAttempt=now;
- const target=dep,keys=period.map(x=>x.key),btn=$('refresh');busy=true;btn.disabled=true;btn.innerHTML='<span class="spin"></span> Проверяем…';
- status('⏳ Проверяем текущую и следующую недели на Яндекс Диске…');
- let successes=[],issues=[];
- try{
-  const lookup=await MoiParyXls.availableWeekFolders();
-  for(let i=0;i<2;i++){
-   try{
-    const result=await MoiParyXls.downloadForWeek(target,keys[i],lookup);
-    if(result.availability==='ok'){
-      const fresh=result.data;
-      if(!weekData[target])weekData[target]={};
-      if(Object.keys(fresh.groups||{}).length<1)throw new Error('Не удалось распознать группы');
-      weekData[target][keys[i]]=fresh;
-      successes.push((i?'Следующая':'Текущая')+' неделя: проверено '+prettyTime(fresh.checked_at));
-    }else{
-      issues.push((i?'Следующая':'Текущая')+' неделя: '+result.message);
-    }
-   }catch(e){issues.push((i?'Следующая':'Текущая')+' неделя: '+String(e.message||e).slice(0,190))}
-  }
+ const btn=$('refresh');busy=true;btn.disabled=true;btn.innerHTML='<span class="spin"></span> Проверяем…';
+ status('⏳ Получаем последнюю обработанную версию расписания…');
+ try {
+  const url=HOSTED_URL+'?t='+now;
+  let response;
+  try {response=await fetch(url,{cache:'no-store'});}catch(e){throw new Error('Не удалось связаться с сайтом: '+e.message)}
+  if(!response.ok)throw new Error(response.status===404?'Автоматическая синхронизация пока не подключена (данные на GitHub отсутствуют)':'Сайт вернул HTTP '+response.status);
+  let payload;try{payload=await response.json()}catch{throw new Error('Вместо данных получен некорректный ответ')}
+  if(payload?.schema!==1||typeof payload.weeks!=='object'||!payload.weeks)throw new Error('Некорректный формат обновления');
+  let received=0;
+  for(const department of DEPTS){for(const p of period){
+   const fresh=payload.weeks[p.key]?.[department];
+   if(fresh&&safeCache(fresh)&&cacheKey(fresh)===p.key&&fresh.groups&&Object.keys(fresh.groups).length){
+    (weekData[department]??={})[p.key]=fresh;received++;
+   }
+  }}
   prune();
-  lastCheck=(successes.length?'✓ '+successes.join('. ')+'.\n':'')+(issues.length?'⚠ '+issues.join('. ')+'\n':'')+'Кабинеты уточняются ежедневно; «—» означает, что номер пока не указан.';
-  lastCheckType=successes.length&&!issues.some(x=>x.startsWith('Текущая неделя:')&&!x.includes('не опубликована'))?'success':'warning';
+  let notes=[];for(const p of period){const detail=payload.checks?.[p.key]?.[dep];if(detail?.error)notes.push(p.label+': '+String(detail.error).slice(0,110))}
+  let latest=payload.generated_at?prettyTime(payload.generated_at):'время неизвестно';
+  const stamp=Date.parse(payload.generated_at||''),age=Number.isFinite(stamp)?Date.now()-stamp:Infinity;
+  const stale=age>3*60*60*1000||age< -10*60*1000;
+  if(received){
+    lastCheck=`${stale?'⚠':'✓'} ${stale?'Данные устарели: автоматическая проверка давно не выполнялась':'Данные загружены с сайта'}. Последний запуск синхронизации: ${latest} (Тюмень).`+(notes.length?'\n⚠ '+notes.join('; '):'')+'\nКабинеты уточняются ежедневно; «—» означает, что номер пока не указан.';
+    lastCheckType=stale||notes.length?'warning':'success';
+  }else{
+    lastCheck=`⚠ Сайт доступен, но актуальные расписания за эти недели ещё не получены. Проверка сервера: ${latest}.`+(notes.length?'\n'+notes.join('; '):'');
+    lastCheckType='warning';
+  }
  }catch(error){
-  lastCheck='⚠ Актуальность НЕ подтверждена: '+String(error.message||error).slice(0,250)+'.\nПоказана только сохранённая копия, если она есть. Проверь официальный Яндекс Диск.';
+  lastCheck='⚠ Актуальность НЕ подтверждена: '+String(error.message||error).slice(0,200)+'.\nПоказана только сохранённая копия, если она есть. Проверь официальный Яндекс Диск.';
   lastCheckType='error';
  }finally{
-  if(dep===target){options();render()}busy=false;btn.disabled=false;btn.textContent='↻ Проверить сейчас';if(dep!==target)startRefresh(true);
+  busy=false;btn.disabled=false;btn.textContent='↻ Проверить сейчас';options();render();
  }
 }
 options();render();startRefresh(true);
