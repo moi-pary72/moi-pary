@@ -93,10 +93,10 @@ button,select{font:inherit}button{cursor:pointer;touch-action:manipulation}butto
    <details class="more" id="sourceDetails"><summary>Источник и подробности</summary><div class="more-body"><p id="status" class="status" role="status" aria-live="polite">Проверяем расписание…</p><p>Файл: <strong id="trustFile">—</strong> · Изменён: <strong id="trustEdited">—</strong></p><p><a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">Официально опубликованные файлы на Яндекс Диске</a> · <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></p></div></details></div>
   <p class="print-note">«—» означает, что кабинет пока не указан. Кабинеты могут уточняться ежедневно.</p><div class="paper-foot"><span>Источник: <span id="sourceName">—</span></span></div>
  </main>
- <footer class="about"><p><b>Мои пары 72</b> — независимый информационный сервис, не официальный сайт техникума или государственного органа. Проверяйте изменения в исходном расписании.</p><div class="about-links"><a href="https://t.me/Cheloveck4" target="_blank" rel="noopener noreferrer">Telegram разработчика</a><a href="mailto:Chernov-vv2008@yandex.ru">E-mail</a></div></footer><div class="site-bottom">Мои пары 72 · Тюменская область · v7.3</div>
+ <footer class="about"><p><b>Мои пары 72</b> — независимый информационный сервис, не официальный сайт техникума или государственного органа. Проверяйте изменения в исходном расписании.</p><div class="about-links"><a href="https://t.me/Cheloveck4" target="_blank" rel="noopener noreferrer">Telegram разработчика</a><a href="mailto:Chernov-vv2008@yandex.ru">E-mail</a></div></footer><div class="site-bottom">Мои пары 72 · Тюменская область · v7.3.1</div>
 </div><script>
 "use strict";
-/* v7.3: visual Tyumen-themed layout built on the validated v7.2 data logic. */
+/* v7.3.1: keep Tyumen design; follow delayed published schedule updates without reloading. */
 const DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const DEPTS=['ИКиМ','ИПиС','ПО и СПА','ЭУиК'];
 const $=id=>document.getElementById(id);
@@ -104,6 +104,10 @@ const STORE='moi-pary-weeks-v6';
 const CATALOG={"ИКиМ":["ДЗ-24-11-1","ДЗ-24-11-2*","ДЗ-24-9-1*","ДЗ-25-11-1","ДЗ-25-11-2","ДЗ-25-9-1","ДЗ-26-11-1","ДЗ-26-11-2","ДЗ-26-9-1","ДЗ-26-9-2","ДЗ-26-9-3","ДПИ-26-9-1","ИФ-24-9-1","ИФ-25-11-1","ИФ-25-9-1","ИФ-26-11-1","ИФ-26-9-1","ИФ-26-9-2","КМТ-24-9-1*","КМТ-24-9-2","КМТ-25-11-1","КМТ-25-9-1","КМТ-26-11-1","КМТ-26-9-1","КМТ-26-9-2","МИШ-25-9-1","МИШ-25-9-2","МИШ-26-11-1","МИШ-26-9-1","МИШ-26-9-2","ОШП-26-9-1","ОШП-26-9-2","ТИК(ПИ)-24-9-3","ТИК(ПИ)-25-11-2","ТИК(ПИ)-25-9-2","ТИК(ПИ)-25-9-3","ТИК(ПИ)-26-11-2","ТИК(ПИ)-26-9-2","ТИК(ЭК)-24-9-1*","ТИК(ЭК)-24-9-2","ТИК(ЭК)-25-11-1","ТИК(ЭК)-25-9-1","ТИК(ЭК)-25-9-4","ТИК(ЭК)-26-11-1","ТИК(ЭК)-26-9-1","ТИК(ЭК)-26-9-3","ХОР-26-9-1"],"ИПиС":["АПП-26-9-1","АПП-26-9-2","АПП-26-9-3","МФС-25-9-1","МФС-26-11-1","МФС-26-9-1","ОБ-25-9-1","ОБ-26-11-1","ОБ-26-9-1","ОБ-26-9-2","ОБ-26-9-3","ОБ-26-9-4","ПК-23-9-1**","ПК-24-9-1*","ПК-25-11-1","ПК-25-9-1","ПК-25-9-2","ПК-26-11-1","ПК-26-9-1","ПК-26-9-2","ПК-26-9-3","ПКД-23-9-1","ПКД-24-11-1**","ПКД-24-11-2**","ПКД-24-9-1*","ПКД-24-9-2*","ПКД-24-9-3","ПКД-24-9-4","ПКД-25-11-1","ПКД-25-11-2","ПКД-25-9-1","ПКД-25-9-2","ПКД-26-11-1","ПКД-26-11-2","ПКД-26-11-3","ПКД-26-9-1","ПКД-26-9-2","ТГ(Г)-25-11-1","ТГ(О)-24-9-1*","ТГ(О)-25-11-2","ТГ(О)-25-9-1","ТГ(О)-25-9-2","ТГ(Э)-25-11-3","ТГ-26-11-1","ТГ-26-11-2","ТГ-26-11-3","ТГ-26-9-1"],"ПО и СПА":["КР-25-1","КР-26-1","ОП-25-1","ОП-25-2","ОП-26-1","П(в)Ш-25-1","ПО-25-1","ПШ-25-1","ШП(в)-25-1"],"ЭУиК":["БУ-24-9-1","БУ-24-9-2*","БУ-25-11-1","БУ-25-11-2","БУ-25-9-1","БУ-26-11-1","БУ-26-9-1","БУ-26-9-2","ГР-23-9-1*","ГР-23-9-2*","ГР-24-9-1","ГР-24-9-2","ГР-25-11-1","ГР-25-11-2","ГР-25-9-1","ГР-26-11-1","ГР-26-9-1","ГР-26-9-2","ДП-26-9-1","ДП-26-9-2","ИСП-24-9-1","ПД-26-9-1","ПД-26-9-2","РМ-24-9-1*","РМ-25-11-1","РМ-25-9-1","РМ-25-9-2","РМ-26-11-1","РМ-26-9-1","РМ-26-9-2","СД-24-9-1*","СД-25-11-1","СД-25-9-1","СД-26-11-1","СД-26-9-1","СД-26-9-2","ТД-24-9-1*","ТД-24-9-2*","ТД-25-11-1","ТД-25-11-2","ТД-25-9-1","ТД-26-11-1","ТД-26-11-2","ТД-26-9-1","ТД-26-9-2"]};
 const HOSTED_URL='./data/schedules.json';
 let lastSyncISO='',lastCheck='',lastCheckType='',statusChecks={};
+// Track the published JSON separately from the browser's own saved copy.
+// A static page cannot start GitHub Actions; it can follow an in-progress deployment.
+let lastRemoteValidator='',watchTimer=null,watchUntil=0,watchBaseVersion='',watchChecks=0;
+const WATCH_WINDOW_MS=3*60*1000,WATCH_INTERVAL_MS=20*1000;
 function get(k){try{return localStorage.getItem(k)}catch{return null}}
 function put(k,v){try{localStorage.setItem(k,v)}catch{}}
 function del(k){try{localStorage.removeItem(k)}catch{}}
@@ -138,7 +142,7 @@ function prettyTime(v){if(!v)return '—';const t=new Date(v);return Number.isNa
 function showWeekTabs(){for(let i=0;i<2;i++){const w=period[i],b=$(i?'weekNext':'weekCurrent');b.classList.toggle('active',selectedWeek===i);b.setAttribute('aria-pressed',String(selectedWeek===i));$(i?'datesNext':'datesCurrent').textContent=`${dayMonth(w.start)}–${dayMonth(addDays(w.start,5))}`}}
 function showDayTabs(){for(const b of document.querySelectorAll('.day-pick')){const i=Number(b.dataset.day);b.classList.toggle('active',selectedDay===i);b.setAttribute('aria-pressed',String(selectedDay===i));b.querySelector('span').textContent=String(addDays(period[selectedWeek].start,i).getUTCDate()).padStart(2,'0')}}
 function options(){const a=entry(dep,0),b=entry(dep,1);const groups=[...new Set([...(CATALOG[dep]||[]),...Object.keys(a?.groups||{}),...Object.keys(b?.groups||{})])].sort((x,y)=>x.localeCompare(y,'ru',{numeric:true}));const dd=$('group'),preferred=get('moi-pary-last-'+dep)||'';const value=groups.includes(group)?group:groups.includes(preferred)?preferred:(dep==='ИКиМ'&&groups.includes('ДПИ-26-9-1')?'ДПИ-26-9-1':groups[0]||'');dd.innerHTML=groups.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');dd.disabled=!groups.length;dd.value=value;group=value}
-function renderTrust(d){$('trustFile').textContent=d?.file||'Не получен';$('trustEdited').textContent=d?.file_modified?prettyTime(d.file_modified)+' (Тюмень)':'—';const checked=lastSyncISO||d?.checked_at||'';$('trustSync').textContent=checked?prettyTime(checked)+' (Тюмень)':'нет данных';const indicator=$('trustIndicator');indicator.className='health';const note=statusChecks[period[selectedWeek].key]?.[dep];if(lastCheckType==='error'){indicator.classList.add('bad');indicator.textContent='Ошибка проверки'}else if(!d){indicator.classList.add('warn');indicator.textContent='Нет расписания'}else if(note?.ok===false || lastCheckType==='warning' || !lastSyncISO){indicator.classList.add('warn');indicator.textContent='Проверьте данные'}else if(lastCheckType==='success'){indicator.classList.add('good');indicator.textContent='Загружено'}else indicator.textContent='Сохранённая копия'}
+function renderTrust(d){$('trustFile').textContent=d?.file||'Не получен';$('trustEdited').textContent=d?.file_modified?prettyTime(d.file_modified)+' (Тюмень)':'—';const checked=lastSyncISO||d?.checked_at||'';$('trustSync').textContent=checked?prettyTime(checked)+' (Тюмень)':'нет данных';const indicator=$('trustIndicator');indicator.className='health';const note=statusChecks[period[selectedWeek].key]?.[dep];if(watchUntil>Date.now()&&d){indicator.classList.add('warn');indicator.textContent='Ждём публикацию';return}if(lastCheckType==='error'){indicator.classList.add('bad');indicator.textContent='Ошибка проверки'}else if(!d){indicator.classList.add('warn');indicator.textContent='Нет расписания'}else if(note?.ok===false || lastCheckType==='warning' || !lastSyncISO){indicator.classList.add('warn');indicator.textContent='Проверьте данные'}else if(lastCheckType==='success'){indicator.classList.add('good');indicator.textContent='Загружено'}else indicator.textContent='Сохранённая копия'}
 function render(){showWeekTabs();showDayTabs();const headingDate=addDays(period[selectedWeek].start,selectedDay);$('dayHeading').textContent=DAYS[selectedDay]+', '+datesRU(headingDate);const d=entry(),g=d?.groups?.[group];$('title').textContent='Расписание занятий';$('subtitle').textContent=dep;$('groupMarker').textContent=group||'—';$('week').textContent=`${datesRU(period[selectedWeek].start)} — ${datesRU(addDays(period[selectedWeek].start,5))}`;$('sourceName').textContent=d?.file||'данные не получены';renderTrust(d);
  let html='';
  if(!d)html=`<div class="empty">${selectedWeek?'Следующая неделя ещё не получена.':'Текущая неделя ещё не загружена.'} Проверьте обновления или откройте официальный источник.</div>`;
@@ -167,21 +171,121 @@ $('dept').addEventListener('change',changeDept);
 $('group').addEventListener('change',()=>{group=$('group').value;put('moi-pary-group',group);put('moi-pary-last-'+dep,group);render()});
 $('weekCurrent').addEventListener('click',()=>changeWeek(0));$('weekNext').addEventListener('click',()=>changeWeek(1));
 for(const b of document.querySelectorAll('.day-pick'))b.addEventListener('click',()=>changeDay(Number(b.dataset.day)));
-$('print').addEventListener('click',()=>window.print());$('refresh').addEventListener('click',()=>startRefresh(true));
+$('print').addEventListener('click',()=>window.print());$('refresh').addEventListener('click',()=>startRefresh(true,'manual'));
 function rollover(){const w=weeks();if(w[0].key!==period[0].key){selectedWeek=0;selectedDay=dayForToday();prune();lastCheck='';options();render();return true}return false}
-async function startRefresh(force=false){if(busy)return;const now=Date.now();if(!force&&now-lastAttempt<60*1000)return;rollover();lastAttempt=now;const b=$('refresh');busy=true;b.disabled=true;$('refreshLabel').textContent='Проверяем…';status('Получаем последнее опубликованное расписание…');try{
- const response=await fetch(HOSTED_URL+'?t='+now,{cache:'no-store'});if(!response.ok)throw new Error(response.status===404?'Файл data/schedules.json отсутствует':'HTTP '+response.status);
- let payload;try{payload=await response.json()}catch{throw new Error('Некорректный ответ сервера')}
- if(payload?.schema!==1||!payload.weeks||typeof payload.weeks!=='object')throw new Error('Некорректный формат данных');
- lastSyncISO=payload.generated_at||'';statusChecks=payload.checks||{};
- let received=0;for(const department of DEPTS){for(const w of period){const fresh=payload.weeks[w.key]?.[department];if(fresh&&safeCache(fresh)&&cacheKey(fresh)===w.key&&Object.keys(fresh.groups||{}).length){(weekData[department]??={})[w.key]=fresh;received++}}}
- prune();const notes=[];for(const w of period){const c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
- const age=Date.now()-Date.parse(payload.generated_at||'');const stale=!Number.isFinite(age)||age>7*60*60*1000||age< -10*60*1000;
- if(received){lastCheckType=stale||notes.length?'warning':'success';lastCheck=`${stale?'Данные могли устареть. ':'Данные получены. '}Синхронизация: ${prettyTime(payload.generated_at)} (Тюмень).${notes.length?'\n'+notes.join('; '):''} Кабинеты уточняются ежедневно.`}
- else{lastCheckType='warning';lastCheck=`Актуальные расписания этих недель пока не получены. Последняя синхронизация: ${prettyTime(payload.generated_at)} (Тюмень).${notes.length?'\n'+notes.join('; '):''}`}
-}catch(err){lastCheckType='error';lastCheck='Не удалось проверить обновления: '+String(err.message||err).slice(0,170)+'. Показана сохранённая копия, если она есть.'}finally{busy=false;b.disabled=false;$('refreshLabel').textContent='Проверить обновления';options();render()}}
+// The refresh button reads data from this site's published JSON. GitHub Actions
+// processes the official XLS separately, so the next deployment can take a minute.
+// Following it with cheap HEAD requests avoids repeated 1 MB downloads per student.
+function clearWatch(){
+ if(watchTimer!==null){clearTimeout(watchTimer);watchTimer=null}
+ watchUntil=0;watchBaseVersion='';watchChecks=0;
+}
+function scheduleWatch(delay=WATCH_INTERVAL_MS){
+ if(!watchUntil)return;
+ if(watchTimer!==null)clearTimeout(watchTimer);
+ watchTimer=setTimeout(watchTick,delay);
+}
+function startWatch(){
+ clearWatch();
+ watchUntil=Date.now()+WATCH_WINDOW_MS;
+ watchBaseVersion=lastSyncISO;
+ lastCheckType='warning';
+ lastCheck='На сайте пока прежняя версия расписания. GitHub может ещё публиковать новые данные. Повторно проверим автоматически в течение трёх минут — страницу перезагружать не нужно.';
+ scheduleWatch();
+}
+async function watchTick(){
+ watchTimer=null;
+ if(!watchUntil)return;
+ if(Date.now()>=watchUntil){
+  clearWatch();
+  lastCheckType='warning';
+  lastCheck='Новая версия пока не опубликована. Страница проверяла данные автоматически три минуты. Кнопка не запускает GitHub Actions; если Excel изменился, нужна успешная серверная синхронизация.';
+  render();return;
+ }
+ if(document.visibilityState==='hidden'||busy){scheduleWatch();return}
+ watchChecks++;
+ let changedOrUnknown=true;
+ try{
+  const head=await fetch(HOSTED_URL+'?head='+Date.now(),{method:'HEAD',cache:'no-store'});
+  if(head.ok){
+   const validator=head.headers.get('etag')||head.headers.get('last-modified')||'';
+   // HEAD may be cached differently on a CDN, so periodically fetch the real JSON anyway.
+   if(validator&&lastRemoteValidator&&validator===lastRemoteValidator&&watchChecks%3!==0)changedOrUnknown=false;
+  }
+ }catch{/* Some hosts block HEAD; a normal GET is our fallback. */}
+ if(changedOrUnknown)await startRefresh(true,'watch');
+ if(watchUntil)scheduleWatch();
+}
+async function startRefresh(force=false,mode='auto'){
+ if(busy)return;
+ const now=Date.now();if(!force&&now-lastAttempt<60*1000)return;
+ rollover();lastAttempt=now;
+ const previousVersion=lastSyncISO;
+ const beforeDays=JSON.stringify(entry()?.groups?.[group]?.days||null);
+ const b=$('refresh');busy=true;b.disabled=true;
+ $('refreshLabel').textContent='Проверяем…';
+ if(mode!=='watch'){
+  status('Проверяем последнюю опубликованную версию расписания…');
+  $('trustIndicator').className='health';$('trustIndicator').textContent='Проверяем…';
+ }
+ try{
+  const response=await fetch(HOSTED_URL+'?t='+Date.now(),{cache:'no-store'});
+  if(!response.ok)throw new Error(response.status===404?'Файл data/schedules.json отсутствует':'HTTP '+response.status);
+  let payload;try{payload=await response.json()}catch{throw new Error('Некорректный ответ сервера')}
+  if(payload?.schema!==1||!payload.weeks||typeof payload.weeks!=='object')throw new Error('Некорректный формат данных');
+  const newValidator=response.headers.get('etag')||response.headers.get('last-modified')||'';
+  if(newValidator)lastRemoteValidator=newValidator;
+  lastSyncISO=payload.generated_at||'';statusChecks=payload.checks||{};
+  let received=0;
+  for(const department of DEPTS){for(const w of period){
+   const fresh=payload.weeks[w.key]?.[department];
+   if(fresh&&safeCache(fresh)&&cacheKey(fresh)===w.key&&Object.keys(fresh.groups||{}).length){
+    (weekData[department]??={})[w.key]=fresh;received++;
+   }
+  }}
+  prune();
+  const notes=[];
+  for(const w of period){const c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
+  const age=Date.now()-Date.parse(payload.generated_at||'');
+  const stale=!Number.isFinite(age)||age>7*60*60*1000||age< -10*60*1000;
+  const versionChanged=!!(previousVersion&&lastSyncISO&&lastSyncISO!==previousVersion);
+  const selectedChanged=beforeDays!==JSON.stringify(entry()?.groups?.[group]?.days||null);
+  if(received){
+   lastCheckType=stale||notes.length?'warning':'success';
+   lastCheck=`${stale?'Опубликованные данные могли устареть. ':'Данные получены. '}Версия от ${prettyTime(payload.generated_at)} (Тюмень).${notes.length?'\n'+notes.join('; '):''} Кабинеты уточняются ежедневно.`;
+   if(versionChanged){
+    clearWatch();
+    lastCheck=`${selectedChanged?'✓ Расписание и кабинеты обновились прямо на странице.':'✓ Получена новая версия расписания; для выбранной группы изменений нет.'}\n`+lastCheck;
+   }else if(mode==='manual'&&previousVersion){
+    startWatch();
+   }else if(mode==='watch'&&watchUntil){
+    lastCheckType='warning';
+    lastCheck='Пока опубликована прежняя версия ('+prettyTime(lastSyncISO)+', Тюмень). Повторная проверка выполняется автоматически; браузер перезагружать не нужно.';
+   }
+  }else{
+   lastCheckType='warning';
+   lastCheck=`Актуальное расписание за выбранные недели пока не получено. Версия файла: ${prettyTime(payload.generated_at)} (Тюмень).${notes.length?'\n'+notes.join('; '):''}`;
+   if(mode==='manual'&&previousVersion)startWatch();
+  }
+ }catch(err){
+  lastCheckType='error';
+  lastCheck='Не удалось проверить обновления: '+String(err.message||err).slice(0,170)+'. Показана сохранённая копия, если она есть.';
+  // A brief network failure shouldn't force a full browser reload either.
+  if(mode==='manual'&&previousVersion)startWatch();
+ }finally{
+  busy=false;b.disabled=false;$('refreshLabel').textContent='Проверить обновления';options();render();
+ }
+}
 options();render();startRefresh(true);
-document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){rollover();if(Date.now()-lastAttempt>=12*60*1000)startRefresh()}});
-window.addEventListener('focus',()=>{rollover();if(Date.now()-lastAttempt>=12*60*1000)startRefresh()});
-
+// Keep an open page current even if the student never touches the browser's reload button.
+// Use a conservative interval to avoid excessive traffic for public GitHub Pages.
+setInterval(()=>{
+ if(document.visibilityState==='visible'&&!busy&&!watchUntil&&Date.now()-lastAttempt>9*60*1000)startRefresh(true,'background');
+},3*60*1000);
+document.addEventListener('visibilitychange',()=>{
+ if(document.visibilityState==='visible'){rollover();if(Date.now()-lastAttempt>=2*60*1000)startRefresh(true,'background')}
+});
+window.addEventListener('focus',()=>{
+ rollover();if(Date.now()-lastAttempt>=2*60*1000)startRefresh(true,'background');
+});
 </script></body></html>
