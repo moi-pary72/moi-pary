@@ -89,25 +89,26 @@ button,select{font:inherit}button{cursor:pointer;touch-action:manipulation}butto
   <div class="paper-head"><div><h2 id="title">Расписание занятий</h2><div class="print-org">ГАПОУ ТО «Тюменский техникум индустрии питания, коммерции и сервиса»</div><h3 id="subtitle">—</h3><p class="week-meta" id="week">—</p></div><div class="group-stamp">Группа<strong id="groupMarker">—</strong></div></div>
   <div class="days-layout" id="days"></div>
   <div class="actions"><button type="button" class="btn refresh" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.8 9a7.5 7.5 0 0 1 12.9-1.3L20 12M4 12l1.3 4.3A7.5 7.5 0 0 0 18.4 15"/></svg><span id="refreshLabel">Проверить обновления</span></button><button type="button" class="btn print" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg><span>Печать / PDF</span></button></div>
-  <div class="trust-bar"><span id="trustIndicator" class="health">Проверяем</span><span class="sync-time">Последняя проверка: <strong id="trustSync">—</strong></span>
-   <details class="more" id="sourceDetails"><summary>Источник и подробности</summary><div class="more-body"><p id="status" class="status" role="status" aria-live="polite">Проверяем расписание…</p><p>Файл: <strong id="trustFile">—</strong> · Изменён: <strong id="trustEdited">—</strong></p><p><a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">Официально опубликованные файлы на Яндекс Диске</a> · <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></p></div></details></div>
+  <div class="trust-bar"><span id="trustIndicator" class="health">Проверяем</span><span class="sync-time">Сайт проверен: <strong id="trustSeen">—</strong></span><span class="sync-time">Версия данных: <strong id="trustSync">—</strong></span>
+   <details class="more" id="sourceDetails"><summary>Источник и подробности</summary><div class="more-body"><p id="status" class="status" role="status" aria-live="polite">Проверяем расписание…</p><p>Автопроверка Яндекс Диска: <strong id="sourceVerified">—</strong>. Она выполняется отдельно от кнопки на сайте, с возможными задержками GitHub.</p><p>Файл: <strong id="trustFile">—</strong> · Изменён: <strong id="trustEdited">—</strong></p><p><a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">Официально опубликованные файлы на Яндекс Диске</a> · <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></p></div></details></div>
   <p class="print-note">«—» означает, что кабинет пока не указан. Кабинеты могут уточняться ежедневно.</p><div class="paper-foot"><span>Источник: <span id="sourceName">—</span></span></div>
  </main>
- <footer class="about"><p><b>Мои пары 72</b> — независимый информационный сервис, не официальный сайт техникума или государственного органа. Проверяйте изменения в исходном расписании.</p><div class="about-links"><a href="https://t.me/Cheloveck4" target="_blank" rel="noopener noreferrer">Telegram разработчика</a><a href="mailto:Chernov-vv2008@yandex.ru">E-mail</a></div></footer><div class="site-bottom">Мои пары 72 · Тюменская область · v7.3.1</div>
+ <footer class="about"><p><b>Мои пары 72</b> — независимый информационный сервис, не официальный сайт техникума или государственного органа. Проверяйте изменения в исходном расписании.</p><div class="about-links"><a href="https://t.me/Cheloveck4" target="_blank" rel="noopener noreferrer">Telegram разработчика</a><a href="mailto:Chernov-vv2008@yandex.ru">E-mail</a></div></footer><div class="site-bottom">Мои пары 72 · Тюменская область · v7.3.2</div>
 </div><script>
 "use strict";
-/* v7.3.1: keep Tyumen design; follow delayed published schedule updates without reloading. */
+/* v7.3.2: transparent verification times, proper source heartbeat, no false pending updates. */
 const DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const DEPTS=['ИКиМ','ИПиС','ПО и СПА','ЭУиК'];
 const $=id=>document.getElementById(id);
 const STORE='moi-pary-weeks-v6';
 const CATALOG={"ИКиМ":["ДЗ-24-11-1","ДЗ-24-11-2*","ДЗ-24-9-1*","ДЗ-25-11-1","ДЗ-25-11-2","ДЗ-25-9-1","ДЗ-26-11-1","ДЗ-26-11-2","ДЗ-26-9-1","ДЗ-26-9-2","ДЗ-26-9-3","ДПИ-26-9-1","ИФ-24-9-1","ИФ-25-11-1","ИФ-25-9-1","ИФ-26-11-1","ИФ-26-9-1","ИФ-26-9-2","КМТ-24-9-1*","КМТ-24-9-2","КМТ-25-11-1","КМТ-25-9-1","КМТ-26-11-1","КМТ-26-9-1","КМТ-26-9-2","МИШ-25-9-1","МИШ-25-9-2","МИШ-26-11-1","МИШ-26-9-1","МИШ-26-9-2","ОШП-26-9-1","ОШП-26-9-2","ТИК(ПИ)-24-9-3","ТИК(ПИ)-25-11-2","ТИК(ПИ)-25-9-2","ТИК(ПИ)-25-9-3","ТИК(ПИ)-26-11-2","ТИК(ПИ)-26-9-2","ТИК(ЭК)-24-9-1*","ТИК(ЭК)-24-9-2","ТИК(ЭК)-25-11-1","ТИК(ЭК)-25-9-1","ТИК(ЭК)-25-9-4","ТИК(ЭК)-26-11-1","ТИК(ЭК)-26-9-1","ТИК(ЭК)-26-9-3","ХОР-26-9-1"],"ИПиС":["АПП-26-9-1","АПП-26-9-2","АПП-26-9-3","МФС-25-9-1","МФС-26-11-1","МФС-26-9-1","ОБ-25-9-1","ОБ-26-11-1","ОБ-26-9-1","ОБ-26-9-2","ОБ-26-9-3","ОБ-26-9-4","ПК-23-9-1**","ПК-24-9-1*","ПК-25-11-1","ПК-25-9-1","ПК-25-9-2","ПК-26-11-1","ПК-26-9-1","ПК-26-9-2","ПК-26-9-3","ПКД-23-9-1","ПКД-24-11-1**","ПКД-24-11-2**","ПКД-24-9-1*","ПКД-24-9-2*","ПКД-24-9-3","ПКД-24-9-4","ПКД-25-11-1","ПКД-25-11-2","ПКД-25-9-1","ПКД-25-9-2","ПКД-26-11-1","ПКД-26-11-2","ПКД-26-11-3","ПКД-26-9-1","ПКД-26-9-2","ТГ(Г)-25-11-1","ТГ(О)-24-9-1*","ТГ(О)-25-11-2","ТГ(О)-25-9-1","ТГ(О)-25-9-2","ТГ(Э)-25-11-3","ТГ-26-11-1","ТГ-26-11-2","ТГ-26-11-3","ТГ-26-9-1"],"ПО и СПА":["КР-25-1","КР-26-1","ОП-25-1","ОП-25-2","ОП-26-1","П(в)Ш-25-1","ПО-25-1","ПШ-25-1","ШП(в)-25-1"],"ЭУиК":["БУ-24-9-1","БУ-24-9-2*","БУ-25-11-1","БУ-25-11-2","БУ-25-9-1","БУ-26-11-1","БУ-26-9-1","БУ-26-9-2","ГР-23-9-1*","ГР-23-9-2*","ГР-24-9-1","ГР-24-9-2","ГР-25-11-1","ГР-25-11-2","ГР-25-9-1","ГР-26-11-1","ГР-26-9-1","ГР-26-9-2","ДП-26-9-1","ДП-26-9-2","ИСП-24-9-1","ПД-26-9-1","ПД-26-9-2","РМ-24-9-1*","РМ-25-11-1","РМ-25-9-1","РМ-25-9-2","РМ-26-11-1","РМ-26-9-1","РМ-26-9-2","СД-24-9-1*","СД-25-11-1","СД-25-9-1","СД-26-11-1","СД-26-9-1","СД-26-9-2","ТД-24-9-1*","ТД-24-9-2*","ТД-25-11-1","ТД-25-11-2","ТД-25-9-1","ТД-26-11-1","ТД-26-11-2","ТД-26-9-1","ТД-26-9-2"]};
 const HOSTED_URL='./data/schedules.json';
-let lastSyncISO='',lastCheck='',lastCheckType='',statusChecks={};
+const SYNC_STATUS_URL='./data/sync-status.json';
+let lastSyncISO='',lastCheck='',lastCheckType='',statusChecks={},sourceMeta=null,localFetchedAt='';
 // Track the published JSON separately from the browser's own saved copy.
 // A static page cannot start GitHub Actions; it can follow an in-progress deployment.
 let lastRemoteValidator='',watchTimer=null,watchUntil=0,watchBaseVersion='',watchChecks=0;
-const WATCH_WINDOW_MS=3*60*1000,WATCH_INTERVAL_MS=20*1000;
+const WATCH_WINDOW_MS=2*60*1000,WATCH_INTERVAL_MS=25*1000;
 function get(k){try{return localStorage.getItem(k)}catch{return null}}
 function put(k,v){try{localStorage.setItem(k,v)}catch{}}
 function del(k){try{localStorage.removeItem(k)}catch{}}
@@ -142,7 +143,35 @@ function prettyTime(v){if(!v)return '—';const t=new Date(v);return Number.isNa
 function showWeekTabs(){for(let i=0;i<2;i++){const w=period[i],b=$(i?'weekNext':'weekCurrent');b.classList.toggle('active',selectedWeek===i);b.setAttribute('aria-pressed',String(selectedWeek===i));$(i?'datesNext':'datesCurrent').textContent=`${dayMonth(w.start)}–${dayMonth(addDays(w.start,5))}`}}
 function showDayTabs(){for(const b of document.querySelectorAll('.day-pick')){const i=Number(b.dataset.day);b.classList.toggle('active',selectedDay===i);b.setAttribute('aria-pressed',String(selectedDay===i));b.querySelector('span').textContent=String(addDays(period[selectedWeek].start,i).getUTCDate()).padStart(2,'0')}}
 function options(){const a=entry(dep,0),b=entry(dep,1);const groups=[...new Set([...(CATALOG[dep]||[]),...Object.keys(a?.groups||{}),...Object.keys(b?.groups||{})])].sort((x,y)=>x.localeCompare(y,'ru',{numeric:true}));const dd=$('group'),preferred=get('moi-pary-last-'+dep)||'';const value=groups.includes(group)?group:groups.includes(preferred)?preferred:(dep==='ИКиМ'&&groups.includes('ДПИ-26-9-1')?'ДПИ-26-9-1':groups[0]||'');dd.innerHTML=groups.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');dd.disabled=!groups.length;dd.value=value;group=value}
-function renderTrust(d){$('trustFile').textContent=d?.file||'Не получен';$('trustEdited').textContent=d?.file_modified?prettyTime(d.file_modified)+' (Тюмень)':'—';const checked=lastSyncISO||d?.checked_at||'';$('trustSync').textContent=checked?prettyTime(checked)+' (Тюмень)':'нет данных';const indicator=$('trustIndicator');indicator.className='health';const note=statusChecks[period[selectedWeek].key]?.[dep];if(watchUntil>Date.now()&&d){indicator.classList.add('warn');indicator.textContent='Ждём публикацию';return}if(lastCheckType==='error'){indicator.classList.add('bad');indicator.textContent='Ошибка проверки'}else if(!d){indicator.classList.add('warn');indicator.textContent='Нет расписания'}else if(note?.ok===false || lastCheckType==='warning' || !lastSyncISO){indicator.classList.add('warn');indicator.textContent='Проверьте данные'}else if(lastCheckType==='success'){indicator.classList.add('good');indicator.textContent='Загружено'}else indicator.textContent='Сохранённая копия'}
+function sourceVerifiedAge(){
+ const t=Date.parse(sourceMeta?.checked_at||'');
+ return Number.isFinite(t)?Date.now()-t:Infinity;
+}
+function renderTrust(d){
+ $('trustFile').textContent=d?.file||'Не получен';
+ $('trustEdited').textContent=d?.file_modified?prettyTime(d.file_modified)+' (Тюмень)':'—';
+ const published=lastSyncISO||d?.checked_at||'';
+ $('trustSync').textContent=published?prettyTime(published):'—';
+ $('trustSeen').textContent=localFetchedAt?prettyTime(localFetchedAt):'—';
+ $('sourceVerified').textContent=sourceMeta?.checked_at?prettyTime(sourceMeta.checked_at)+' (Тюмень)':'нет подтверждения';
+ const indicator=$('trustIndicator');indicator.className='health';
+ const sourceOk=sourceMeta?.current_week_departments?.[dep]!==false;
+ const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000&&
+    sourceMeta?.current_week===period[0].key;
+ const note=statusChecks[period[selectedWeek].key]?.[dep];
+ if(lastCheckType==='error'){
+  indicator.classList.add('bad');indicator.textContent='Сеть недоступна';
+ }else if(!d){
+  indicator.classList.add('warn');indicator.textContent='Нет расписания';
+ }else if(!sourceOk||note?.ok===false){
+  indicator.classList.add('warn');indicator.textContent='Сбой источника';
+ }else if(!sourceFresh){
+  indicator.classList.add('warn');indicator.textContent='Проверка устарела';
+ }else{
+  indicator.classList.add('good');indicator.textContent='Данные загружены';
+ }
+}
+
 function render(){showWeekTabs();showDayTabs();const headingDate=addDays(period[selectedWeek].start,selectedDay);$('dayHeading').textContent=DAYS[selectedDay]+', '+datesRU(headingDate);const d=entry(),g=d?.groups?.[group];$('title').textContent='Расписание занятий';$('subtitle').textContent=dep;$('groupMarker').textContent=group||'—';$('week').textContent=`${datesRU(period[selectedWeek].start)} — ${datesRU(addDays(period[selectedWeek].start,5))}`;$('sourceName').textContent=d?.file||'данные не получены';renderTrust(d);
  let html='';
  if(!d)html=`<div class="empty">${selectedWeek?'Следующая неделя ещё не получена.':'Текущая неделя ещё не загружена.'} Проверьте обновления или откройте официальный источник.</div>`;
@@ -189,17 +218,19 @@ function startWatch(){
  clearWatch();
  watchUntil=Date.now()+WATCH_WINDOW_MS;
  watchBaseVersion=lastSyncISO;
- lastCheckType='warning';
- lastCheck='На сайте пока прежняя версия расписания. GitHub может ещё публиковать новые данные. Повторно проверим автоматически в течение трёх минут — страницу перезагружать не нужно.';
+ // A static site cannot know whether a GitHub run was triggered.
+ // Quietly follow a possible new deployment, without claiming it exists.
  scheduleWatch();
 }
+
 async function watchTick(){
  watchTimer=null;
  if(!watchUntil)return;
  if(Date.now()>=watchUntil){
   clearWatch();
-  lastCheckType='warning';
-  lastCheck='Новая версия пока не опубликована. Страница проверяла данные автоматически три минуты. Кнопка не запускает GitHub Actions; если Excel изменился, нужна успешная серверная синхронизация.';
+  if(lastCheckType!=='error'){
+   lastCheck='Повторная проверка завершена: опубликованная версия не изменилась. Если кабинет нужен срочно, сверьтесь с официальным Яндекс Диском.';
+  }
   render();return;
  }
  if(document.visibilityState==='hidden'||busy){scheduleWatch();return}
@@ -225,17 +256,30 @@ async function startRefresh(force=false,mode='auto'){
  const b=$('refresh');busy=true;b.disabled=true;
  $('refreshLabel').textContent='Проверяем…';
  if(mode!=='watch'){
-  status('Проверяем последнюю опубликованную версию расписания…');
+  status('Проверяем опубликованную копию расписания…');
   $('trustIndicator').className='health';$('trustIndicator').textContent='Проверяем…';
  }
  try{
-  const response=await fetch(HOSTED_URL+'?t='+Date.now(),{cache:'no-store'});
+  const [response,verificationResponse]=await Promise.all([
+   fetch(HOSTED_URL+'?t='+Date.now(),{cache:'no-store'}),
+   fetch(SYNC_STATUS_URL+'?t='+Date.now(),{cache:'no-store'}).catch(()=>null)
+  ]);
   if(!response.ok)throw new Error(response.status===404?'Файл data/schedules.json отсутствует':'HTTP '+response.status);
   let payload;try{payload=await response.json()}catch{throw new Error('Некорректный ответ сервера')}
   if(payload?.schema!==1||!payload.weeks||typeof payload.weeks!=='object')throw new Error('Некорректный формат данных');
+  // The marker is only written after GitHub checked the Yandex Disk metadata.
+  // Do not pretend that a browser GET verifies the primary Excel files.
+  if(verificationResponse?.ok){
+   try{
+    const marker=await verificationResponse.json();
+    if(marker?.schema===1&&marker.checked_at&&marker.current_week_departments)
+     sourceMeta=marker;
+   }catch{/* Older deployments may have no marker; keep last known status. */}
+  }
   const newValidator=response.headers.get('etag')||response.headers.get('last-modified')||'';
   if(newValidator)lastRemoteValidator=newValidator;
   lastSyncISO=payload.generated_at||'';statusChecks=payload.checks||{};
+  localFetchedAt=new Date().toISOString();
   let received=0;
   for(const department of DEPTS){for(const w of period){
    const fresh=payload.weeks[w.key]?.[department];
@@ -245,37 +289,40 @@ async function startRefresh(force=false,mode='auto'){
   }}
   prune();
   const notes=[];
-  for(const w of period){const c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
-  const age=Date.now()-Date.parse(payload.generated_at||'');
-  const stale=!Number.isFinite(age)||age>7*60*60*1000||age< -10*60*1000;
+  {const w=period[selectedWeek],c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
+  const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000&&
+    sourceMeta?.current_week===period[0].key;
   const versionChanged=!!(previousVersion&&lastSyncISO&&lastSyncISO!==previousVersion);
   const selectedChanged=beforeDays!==JSON.stringify(entry()?.groups?.[group]?.days||null);
   if(received){
-   lastCheckType=stale||notes.length?'warning':'success';
-   lastCheck=`${stale?'Опубликованные данные могли устареть. ':'Данные получены. '}Версия от ${prettyTime(payload.generated_at)} (Тюмень).${notes.length?'\n'+notes.join('; '):''} Кабинеты уточняются ежедневно.`;
+   lastCheckType=!sourceFresh||notes.length?'warning':'success';
+   lastCheck=`Опубликованная копия проверена: ${prettyTime(localFetchedAt)} (Тюмень). `+
+     `Версия расписания: ${prettyTime(lastSyncISO)} (Тюмень).`+
+     `\nАвтоматическая проверка Яндекс Диска: `+
+     `${sourceMeta?.checked_at?prettyTime(sourceMeta.checked_at)+' (Тюмень)':'нет подтверждения нового запуска'}.`+
+     `${notes.length?'\n'+notes.join('; '):''} Кабинеты могут изменяться ежедневно.`;
    if(versionChanged){
     clearWatch();
-    lastCheck=`${selectedChanged?'✓ Расписание и кабинеты обновились прямо на странице.':'✓ Получена новая версия расписания; для выбранной группы изменений нет.'}\n`+lastCheck;
+    lastCheck=`${selectedChanged?'✓ Изменения в расписании отображены без перезагрузки.':'✓ Получена новая версия; для выбранной группы изменений нет.'}\n`+lastCheck;
    }else if(mode==='manual'&&previousVersion){
     startWatch();
-   }else if(mode==='watch'&&watchUntil){
-    lastCheckType='warning';
-    lastCheck='Пока опубликована прежняя версия ('+prettyTime(lastSyncISO)+', Тюмень). Повторная проверка выполняется автоматически; браузер перезагружать не нужно.';
+    lastCheck+='\nЕсли GitHub ещё публикует изменения, страница подхватит их самостоятельно в течение двух минут.';
    }
   }else{
    lastCheckType='warning';
-   lastCheck=`Актуальное расписание за выбранные недели пока не получено. Версия файла: ${prettyTime(payload.generated_at)} (Тюмень).${notes.length?'\n'+notes.join('; '):''}`;
-   if(mode==='manual'&&previousVersion)startWatch();
+   lastCheck=`Расписание выбранных недель пока не получено. `+
+    `Проверена опубликованная копия: ${prettyTime(localFetchedAt)} (Тюмень).`+
+    (notes.length?'\n'+notes.join('; '):'');
   }
  }catch(err){
   lastCheckType='error';
-  lastCheck='Не удалось проверить обновления: '+String(err.message||err).slice(0,170)+'. Показана сохранённая копия, если она есть.';
-  // A brief network failure shouldn't force a full browser reload either.
-  if(mode==='manual'&&previousVersion)startWatch();
+  lastCheck='Не удалось проверить опубликованное расписание: '+
+   String(err.message||err).slice(0,170)+'. Показана последняя сохранённая копия, если она есть.';
  }finally{
   busy=false;b.disabled=false;$('refreshLabel').textContent='Проверить обновления';options();render();
  }
 }
+
 options();render();startRefresh(true);
 // Keep an open page current even if the student never touches the browser's reload button.
 // Use a conservative interval to avoid excessive traffic for public GitHub Pages.
