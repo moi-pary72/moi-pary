@@ -1,8 +1,8 @@
 <!doctype html>
 <html lang="ru"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#f8f9f7"><meta name="description" content="Независимое расписание для студентов: выбор отделения и группы, кабинеты с ежедневными обновлениями.">
-<title>Мои пары — расписание техникума</title>
+<meta name="theme-color" content="#174A87"><meta name="description" content="Мои пары 72 — независимый студенческий сервис расписаний Тюменской области. Пары, кабинеты, преподаватели и обновления из открытых источников.">
+<title>Мои пары 72 — расписание студентов Тюменской области</title>
 
 <style>
 :root{color-scheme:light;--bg:#edf2f8;--ink:#18233d;--sub:#637084;--line:#dce4ee;--blue:#2452ad;--red:#a03838;--card:#fff;--light:#f4f7fc}
@@ -171,47 +171,233 @@ button:enabled:active{transform:translateY(1px);box-shadow:none}
 .paper h2{letter-spacing:-.035em}
 @media(max-width:600px){.week-choice{padding:13px 11px 12px}.week-choice-title>span:first-child{font-size:14px}.week-choice-hint{font-size:10px}.week-tabs{gap:8px}.week-tab{padding:12px 10px;min-height:70px}.week-tab.active{padding:11px 9px}.week-tab-name{font-size:12px}.week-tab-dates{font-size:11px}.brand::before{right:15px;top:15px}}
 @media print{.week-choice,.week-tabs,.week-choice-note{display:none!important}.paper .day-title{border:0!important}}
+
+/* v7.1: современный региональный студенческий сервис, без официальной символики */
+:root {--bg:#f4f7fb;--ink:#202c3b;--sub:#617286;--line:#dce5ef;--blue:#174a87;--red:#b8454d;--card:#ffffff;--light:#f4f7fb;--blue-soft:#eaf2fc;--blue-bright:#2864ba;--green:#287654;--warning:#a76b1d}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+a{color:var(--blue);text-underline-offset:3px}
+.wrap{max-width:1010px;padding:27px 22px 58px}
+.brand{margin-bottom:17px;padding:0;overflow:hidden;border:1px solid #dbe5f0;border-left:0;border-radius:17px;background:#fff;box-shadow:0 9px 30px #183f6a0b}
+.brand::after,.brand::before{display:none!important}
+.tricolor{height:4px;background:linear-gradient(to right,#fff 0%,#fff 33.333%,#235da2 33.333%,#235da2 66.667%,#b8454d 66.667%,#b8454d 100%);border-bottom:1px solid #e7edf4}
+.brand-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:22px;padding:26px 30px 27px}
+.brand-main{max-width:730px;min-width:0}
+.brand .eyebrow{display:flex;align-items:center;gap:8px;margin:0 0 12px;padding:0;color:#59718b;font-size:11px;font-weight:750;letter-spacing:.11em;text-transform:uppercase}
+.region-marker{display:inline-block;width:8px;height:8px;flex:none;border-radius:50%;background:#b8454d;box-shadow:0 0 0 4px #f9e9eb}
+.brand h1{font-size:clamp(35px,5vw,55px);line-height:1.03;letter-spacing:-.055em;font-weight:820;color:#143d70;margin:0 0 11px}
+.brand h1 strong{font-weight:820;color:#b8454d}
+.brand .hero-subtitle{display:block;font-size:clamp(14px,1.9vw,17px);font-weight:560;color:#405a77;max-width:580px;line-height:1.46;margin:0}
+.hero-caption{font-size:12px;line-height:1.5;color:#6d7e92;margin:9px 0 0;max-width:600px}
+.pill{background:#edf4ff;border:1px solid #d7e5f7;color:#285383;border-radius:8px;box-shadow:none;display:inline-flex;gap:6px;align-items:center;font-size:11px;font-weight:720;padding:7px 11px;margin-top:15px}
+.hero-monogram{display:flex;align-items:center;justify-content:center;position:relative;width:116px;height:116px;border:1px solid #cfdfef;background:linear-gradient(140deg,#f1f7ff,#e0edfb);color:#174a87;border-radius:25px;font-size:54px;font-weight:820;letter-spacing:-.08em;line-height:1;box-shadow:inset 0 1px #fff8;user-select:none}
+.hero-monogram::after{content:'ТЮМЕНЬ';position:absolute;bottom:13px;font-size:9px;letter-spacing:.13em;font-weight:760;color:#5e81a6}
+.controls{border:1px solid #dbe5ee;background:white;border-radius:16px;box-shadow:0 8px 30px #163f6609;padding:23px 25px}
+.controls-head{margin:0 0 18px;align-items:center}
+.controls-head strong{color:#183d69;font-size:20px;font-weight:790}
+.controls-head .tiny{color:#6a7e92;max-width:220px}
+.institution{background:#f8fbff;border:1px solid #dce9f6;border-radius:12px;padding:16px 17px 14px;margin-bottom:19px}
+.institution-kicker{font-size:11px;letter-spacing:.085em;font-weight:770;color:#56779c;text-transform:uppercase;margin-bottom:9px}
+.institution label{margin:0 0 9px;font-size:13px;color:#364e6b;font-weight:740}
+.institution select{min-height:52px;background:#fff;color:#213a58;font-size:13px;font-weight:660;cursor:default;border-color:#d3e0ee;padding:10px 34px 10px 13px}
+.institution-note{font-size:11px;color:#75859a;line-height:1.4;margin:8px 0 0}
+.selector-row{gap:17px}
+label{color:#3e526e;font-weight:720}
+.step{background:#eaf2fc;border-color:#d3e2f2;color:#285c97;border-radius:6px}
+select{border:1px solid #c7d5e5;min-height:51px;background:#fff;border-radius:9px;color:#243750;font-weight:620}
+select:focus{outline:3px solid #b1d1fc;outline-offset:2px;border-color:#2864ba}
+.week-choice{background:#f7faff;border:1px solid #dce6f3;border-radius:12px;margin-top:20px;padding:17px 18px 13px}
+.week-choice-title>span:first-child{color:#244566}
+.week-choice-hint{color:#7c8da0}
+.week-tabs{gap:11px}
+.week-tab{min-height:74px;border-color:#cfdded;background:#fff;color:#314c6b;border-radius:9px}
+.week-tab.active{background:#eaf2fc;border:2px solid #2864ba;box-shadow:inset 0 0 0 1px #fff7}
+.week-tab.active .week-tab-dates{color:#245a97}
+.week-spark{color:#b8454d}
+.week-tab:focus-visible{outline-color:#82b3ef}
+.week-choice-note{color:#6b829b}
+.actions{margin-top:19px}
+button{min-height:49px;border-radius:9px;font-weight:740}
+.mainbtn{background:#174a87;color:#fff}
+.mainbtn:hover{background:#1b569e}
+.outlinebtn{background:#fff;color:#174a87;border:1px solid #b6cce4}
+.outlinebtn:hover{background:#f5f9ff}
+.status{background:#f1f6fc;border-left:3px solid #78a2d5;color:#475e77}
+.status.success{background:#edf7f2;border-left-color:#419872;color:#236448}
+.status.warning{background:#fff8ec;border-left-color:#d9a24c;color:#825c25}
+.status.error{background:#fff0f0;border-left-color:#ba5960;color:#8f343d}
+.trust{border:1px solid #dce5ef;border-radius:16px;background:#fff;box-shadow:0 6px 22px #163f6607;padding:18px 23px 20px;margin-top:16px}
+.trust-title-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.trust-title{margin:0;color:#203f64;font-size:16px;font-weight:780}
+.trust-indicator{display:inline-flex;align-items:center;gap:6px;border:1px solid #dce5ef;background:#f2f6fa;color:#526a80;padding:6px 10px;border-radius:99px;font-size:11px;font-weight:730;white-space:normal;text-align:center}
+.trust-indicator::before{content:'';height:7px;width:7px;flex:none;border-radius:50%;background:#8fa0b1}
+.trust-indicator.good{border-color:#cfe8da;background:#edf8f2;color:#266b4f}.trust-indicator.good::before{background:#287654}
+.trust-indicator.warn{border-color:#f0dfbd;background:#fff8eb;color:#895b22}.trust-indicator.warn::before{background:#bc8337}
+.trust-indicator.bad{border-color:#efd0d3;background:#fff1f2;color:#a1424a}.trust-indicator.bad::before{background:#b8454d}
+.trust-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px}
+.trust-item{min-width:0;padding:12px 13px;border-radius:10px;background:#f6f9fd;border:1px solid #e7edf5}
+.trust-item small{display:block;color:#647e99;font-size:11px;font-weight:650;line-height:1.3;margin-bottom:5px}
+.trust-item b{display:block;color:#29496b;font-size:12px;font-weight:710;line-height:1.35;overflow-wrap:anywhere}
+.trust-foot{font-size:12px;color:#698097;line-height:1.55;margin:12px 0 0}
+.trust-foot a{font-weight:650}
+.paper{border:1px solid #dce5ef;border-radius:16px;box-shadow:0 10px 34px #153c6509;margin-top:17px;padding:28px 30px 22px}
+.paper-head{border-bottom:2px solid #174a87;margin-bottom:17px;padding-bottom:14px}
+.paper h2{color:#143d70;font-size:clamp(23px,3vw,29px)}
+.paper h3{color:#475e77}
+.paper-org{font-size:11px;line-height:1.4;font-weight:600;color:#617b98;margin:4px 0 10px;max-width:550px}
+.paper .doc-mark b{color:#174a87}
+.paper .day-title{border-left:4px solid #2864ba;background:#eef4fc;color:#174a87;padding:10px 12px}
+.paper .day-title .ddate{color:#5e7898}
+.day th{background:#f5f8fc;color:#627792}
+.day td,.day th{border-bottom-color:#e6edf5}
+.day tr:nth-child(even) td{background:#fbfdff}
+.day .number{color:#647c98}
+.day .time{color:#264b76}
+.day .subject{color:#243d5b}
+.day .room{color:#235b9a}
+.room-value{background:#eaf3ff;color:#1f558d;border-radius:5px}
+.day .room.unknown,.room-dash{color:#98a6b4}
+.paper-key{color:#71869a;border-top-color:#e3eaf3}
+.paper-foot{color:#667c91}
+.paper-foot a{color:#174a87}
+.help{color:#607993;padding:16px 4px 0}
+.notice{color:#71859a;margin-top:12px}
+.developer{background:#eef4fb;border:1px solid #d8e5f1;padding:23px 25px;border-radius:15px}
+.developer-eyebrow{color:#50769d}
+.developer h2{color:#153d6c}
+.developer p{color:#58708a}
+.developer-links a{color:#174a87;border:1px solid #cddfeb;border-radius:8px}
+.developer-links a:first-child{color:#174a87}
+.site-bottom{color:#7990a6}
+.site-bottom a{color:#174a87}
+@media screen and (max-width:600px){
+ .wrap{padding:12px 9px 35px}
+ .brand{border-radius:13px;margin-bottom:12px}
+ .brand-inner{padding:21px 18px 22px;grid-template-columns:minmax(0,1fr) auto;gap:9px}
+ .hero-monogram{width:59px;height:59px;font-size:31px;border-radius:14px;align-self:start;margin-top:4px}
+ .hero-monogram::after{font-size:5px;bottom:6px}
+ .brand .eyebrow{font-size:10px;letter-spacing:.08em;margin-bottom:10px;line-height:1.4}
+ .brand h1{font-size:clamp(31px,8.7vw,43px);margin-bottom:9px;line-height:1.02}
+ .brand .hero-subtitle{font-size:13px;line-height:1.45}
+ .hero-caption{font-size:11px;margin:7px 0 0}
+ .pill{margin-top:12px;padding:7px 9px;font-size:10px}
+ .controls{padding:16px 14px;border-radius:12px}
+ .controls-head{align-items:flex-start;gap:8px;margin-bottom:13px}
+ .controls-head strong{font-size:18px}.controls-head .tiny{font-size:10px;max-width:135px}
+ .institution{padding:13px 12px 11px;margin-bottom:17px}
+ .institution select{font-size:12px}
+ .selector-row{grid-template-columns:1fr;gap:13px}
+ .week-choice{padding:13px 11px 12px}
+ .trust{padding:16px 14px;margin-top:13px;border-radius:12px}
+ .trust-title-row{align-items:flex-start}
+ .trust-title{font-size:15px}
+ .trust-grid{grid-template-columns:1fr 1fr;gap:8px}
+ .trust-item:first-child{grid-column:1/-1}
+ .trust-item{padding:10px}
+ .trust-item small{font-size:10px}
+ .trust-item b{font-size:11px}
+ .trust-foot{font-size:11px}
+ .paper{padding:17px 12px;border-radius:12px;margin-top:13px}
+ .paper-head{gap:8px}
+ .paper-org{font-size:10px;max-width:100%}
+ .paper .day-title{padding:9px 10px}
+ /* На узких смартфонах пары показываем карточками, не пятиколоночной микротаблицей. */
+ .day table,.day tbody{display:block;width:100%;table-layout:auto}
+ .day thead,.day colgroup{display:none}
+ .day tr{display:grid;grid-template-columns:68px minmax(0,1fr) 58px;grid-template-rows:auto auto auto;gap:2px 8px;align-items:start;padding:10px 9px;background:#fff;border-bottom:1px solid #e4ebf3}
+ .day tr:nth-child(even){background:#f9fbfe}
+ .day tr:nth-child(even) td{background:transparent}
+ .day td{border:0!important;padding:0!important;background:transparent!important;min-width:0;overflow-wrap:anywhere;font-size:12px;line-height:1.4}
+ .day .number{grid-column:1;grid-row:1;font-size:11px;font-weight:750;color:#466e9b}
+ .day .number::before{content:'Пара ';font-weight:500;color:#7a8fa5}
+ .day .time{grid-column:1;grid-row:2;font-size:11px;color:#476585;white-space:normal;letter-spacing:normal}
+ .day .subject{grid-column:2;grid-row:1 / 3;font-size:12px;font-weight:730;color:#1d3757;line-height:1.37}
+ .day .room{grid-column:3;grid-row:1 / 3;font-size:11px;text-align:right;align-self:start;white-space:normal;overflow-wrap:anywhere}
+ .room-value{font-size:11px;padding:4px 5px;display:inline-block;max-width:100%}
+ .day .teacher{grid-column:2 / 4;grid-row:3;font-size:10px;color:#62758b;margin-top:3px}
+ .day .teacher::before{content:'Преподаватель: ';color:#8a9aab}
+ .time-start,.time-end{display:block;white-space:nowrap}
+ .developer{padding:17px 16px}
+}
+@media screen and (max-width:350px){.brand-inner{padding:19px 14px}.hero-monogram{width:48px;height:48px;font-size:26px}.brand h1{font-size:30px}.day tr{grid-template-columns:59px minmax(0,1fr) 53px;gap:2px 5px;padding:9px 6px}.day .subject{font-size:11px}.day .time{font-size:10px}}
+@media print{
+ .brand,.controls,.trust,.help,.notice,.developer,.site-bottom{display:none!important}
+ .paper{border:0!important;box-shadow:none!important;padding:0!important;margin:0!important}
+ .paper-org{color:#000!important}
+ .day table{display:table!important;width:100%!important;table-layout:fixed!important}
+ .day thead{display:table-header-group!important}.day tbody{display:table-row-group!important}.day colgroup{display:table-column-group!important}
+ .day tr{display:table-row!important;border:0!important;background:transparent!important;padding:0!important}
+ .day td{display:table-cell!important;font-size:8pt!important;padding:3px 4px!important;border-bottom:1px solid #ddd!important}
+ .day .number::before,.day .teacher::before{display:none!important}
+ .day .number,.day .time,.day .subject,.day .teacher,.day .room{grid-column:auto!important;grid-row:auto!important;margin:0!important}
+ .paper .day-title{color:#000!important;background:#eee!important;border-left:0!important}
+}
 </style></head><body>
 <div class="wrap">
- <header class="brand"><div class="brand-main"><div class="eyebrow">Учебное расписание · независимый сервис</div><h1>Мои пары<span class="brand-period">.</span></h1><small>Расписание всех отделений в одном месте. Пары, преподаватели, кабинеты — без огромных таблиц.</small><span class="pill">Без регистрации · Бесплатно</span></div></header>
+ <header class="brand" aria-label="Мои пары 72 — студенческий сервис">
+  <div class="tricolor" aria-hidden="true"></div>
+  <div class="brand-inner">
+   <div class="brand-main">
+    <div class="eyebrow"><span class="region-marker" aria-hidden="true"></span>Тюмень · Тюменская область</div>
+    <h1>Мои пары <strong>72</strong></h1>
+    <p class="hero-subtitle">Расписание занятий колледжей и техникумов Тюменской области</p>
+    <p class="hero-caption">Выбирай учебную группу и смотри пары, преподавателей и кабинеты в одном месте.</p>
+    <span class="pill">Независимый студенческий сервис · Бесплатно</span>
+   </div>
+   <div class="hero-monogram" aria-hidden="true">72</div>
+  </div>
+ </header>
  <section class="controls" aria-label="Параметры расписания">
-  <div class="controls-head"><strong>Моё расписание</strong><span class="tiny">Выбор сохраняется на устройстве</span></div>
+  <div class="controls-head"><strong>Найти своё расписание</strong><span class="tiny">Выбор запоминается на устройстве</span></div>
+  <div class="institution">
+   <div class="institution-kicker">Учебное заведение</div>
+   <label for="institution">Выберите образовательную организацию</label>
+   <select id="institution" aria-describedby="institutionHint"><option value="ttipks">Тюменский техникум индустрии питания, коммерции и сервиса</option></select>
+   <p class="institution-note" id="institutionHint">Первое подключённое учебное заведение · ГАПОУ ТО «ТТИПКС». Другие учреждения добавим постепенно.</p>
+  </div>
   <div class="selector-row">
-   <div><label for="dept"><span class="step">01</span> Моё отделение</label><select id="dept"><option value="ИКиМ">ИКиМ — индустрия красоты и моды</option><option value="ИПиС">ИПиС</option><option value="ПО и СПА">ПО и СПА</option><option value="ЭУиК">ЭУиК</option></select></div>
-   <div><label for="group"><span class="step">02</span> Моя группа</label><select id="group"></select></div>
+   <div><label for="dept"><span class="step">01</span> Отделение</label><select id="dept"><option value="ИКиМ">ИКиМ — индустрия красоты и моды</option><option value="ИПиС">ИПиС</option><option value="ПО и СПА">ПО и СПА</option><option value="ЭУиК">ЭУиК</option></select></div>
+   <div><label for="group"><span class="step">02</span> Учебная группа</label><select id="group"></select></div>
   </div>
   <div class="week-choice" aria-label="Выбор учебной недели">
-   <div class="week-choice-title"><span>Когда учимся?</span><span class="week-choice-hint">Только эта и следующая недели</span></div>
+   <div class="week-choice-title"><span>Учебная неделя</span><span class="week-choice-hint">Только текущая и следующая</span></div>
    <div class="week-tabs" role="group" aria-label="Выбор недели">
     <button type="button" id="weekCurrent" class="week-tab active" aria-pressed="true"><span class="week-tab-name">Эта неделя</span><span class="week-tab-dates" id="datesCurrent">—</span></button>
     <button type="button" id="weekNext" class="week-tab" aria-pressed="false"><span class="week-tab-name">Следующая <span class="week-spark" aria-hidden="true">✦</span></span><span class="week-tab-dates" id="datesNext">—</span></button>
    </div>
    <p class="week-choice-note" id="weekChoiceNote">При открытии показывается текущая неделя. Следующая появляется после публикации.</p>
   </div>
-  <div class="actions"><button class="mainbtn" id="refresh">↻ Проверить сейчас</button><button class="outlinebtn" id="print">▣ Сохранить / печатать А4</button></div>
-  <div role="status" aria-live="polite" class="status" id="status">Готовим текущую неделю…</div>
+  <div class="actions"><button type="button" class="mainbtn" id="refresh">↻ Проверить обновления</button><button type="button" class="outlinebtn" id="print">▣ Печать / PDF</button></div>
+  <div role="status" aria-live="polite" class="status" id="status">Проверяем расписание…</div>
  </section>
- <main class="paper" id="paper" aria-label="Расписание для печати"><div class="paper-head"><div><h2 id="title">Расписание занятий</h2><h3 id="subtitle">Выберите группу</h3><div class="week-meta" id="week">—</div></div><div class="doc-mark">Учебная группа<b id="groupMarker">—</b></div></div><section id="days"></section><div class="paper-key">— кабинет пока не указан в опубликованном расписании. Номера могут уточняться ежедневно.</div><div class="paper-foot"><span>Источник: расписание техникума • <span id="sourceName">—</span></span><span>Сверяйте изменения с официальным источником: <a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" rel="noreferrer" target="_blank">Яндекс Диск</a></span></div></main>
- <div class="help">↻ Список групп доступен без сети. При входе и по кнопке загружаем последние обработанные расписания из официальных Excel. Обновление выполняется на GitHub с интервалом около 30 минут, возможны задержки. Кабинеты меняются ежедневно. Старые недели не храним.</div>
- <div class="notice" id="notice">Это независимый проект, а не официальный сервис техникума.</div>
-
+ <section class="trust" aria-label="Сведения об источнике и актуальности данных">
+  <div class="trust-title-row"><h2 class="trust-title">Достоверность расписания</h2><span class="trust-indicator" id="trustIndicator">Проверяем данные</span></div>
+  <div class="trust-grid">
+   <div class="trust-item"><small>Исходный файл</small><b id="trustFile">Ожидаем загрузку</b></div>
+   <div class="trust-item"><small>Последняя синхронизация</small><b id="trustSync">Проверяем…</b></div>
+   <div class="trust-item"><small>Файл изменён источником</small><b id="trustEdited">—</b></div>
+  </div>
+  <p class="trust-foot">Данные берём из <a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" rel="noopener noreferrer" target="_blank">открытой папки с расписаниями</a>. <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" rel="noopener noreferrer" target="_blank">Официальный сайт техникума</a>. Кабинеты могут меняться ежедневно; при расхождении сверяйся с первоисточником.</p>
+ </section>
+ <main class="paper" id="paper" aria-label="Расписание для печати"><div class="paper-head"><div><h2 id="title">Расписание занятий</h2><div class="paper-org">ГАПОУ ТО «Тюменский техникум индустрии питания, коммерции и сервиса»</div><h3 id="subtitle">Выберите группу</h3><div class="week-meta" id="week">—</div></div><div class="doc-mark">Учебная группа<b id="groupMarker">—</b></div></div><section id="days"></section><div class="paper-key">— кабинет пока не указан в опубликованном расписании. Номера могут уточняться ежедневно.</div><div class="paper-foot"><span>Источник: расписание техникума • <span id="sourceName">—</span></span><span>Сверяйте изменения с <a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" rel="noopener noreferrer" target="_blank">открытой папкой расписаний</a></span></div></main>
+ <div class="help">Список групп доступен без интернета. Расписание загружается из обработанных Excel, опубликованных учебным заведением. Автоматическая проверка запускается GitHub примерно раз в 30 минут, возможны задержки. Храним только текущую и следующую недели.</div>
+ <div class="notice" id="notice">«Мои пары 72» — независимый информационный проект. Не является официальным сайтом техникума или государственного органа.</div>
  <section class="developer" aria-label="Связь с разработчиком">
-  <div><div class="developer-eyebrow">Независимый проект для студентов</div><h2>Нашёл ошибку?<br>Напиши.</h2><p>Не тот кабинет, пропала группа или есть идея получше? Свяжись с разработчиком. Это не официальный канал техникума.</p></div>
+  <div><div class="developer-eyebrow">О проекте и обратная связь</div><h2>Поможем сделать расписание удобнее</h2><p>Нашёл неверный кабинет, отсутствующую группу или хочешь предложить подключить другое учебное заведение? Напиши разработчику. Это не официальный канал техникума.</p></div>
   <nav class="developer-links" aria-label="Контакты разработчика"><a href="https://t.me/Cheloveck4" target="_blank" rel="noopener noreferrer">↗ Telegram: @Cheloveck4</a><a href="mailto:Chernov-vv2008@yandex.ru">✉ Chernov-vv2008@yandex.ru</a></nav>
  </section>
- <footer class="site-bottom">Неофициальный студенческий сервис · Данные из <a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">публичного расписания техникума</a></footer>
+ <footer class="site-bottom">© Мои пары 72 · Независимый студенческий сервис · Тюменская область · <a href="https://mck72.ru/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></footer>
 </div>
-
-
 <script>
 'use strict';
-/* «Мои пары» V6: никакого архива недель, только текущая и следующая в локальном хранилище. */
+/* «Мои пары 72» v7.1: текущая и следующая недели, данные GitHub Actions, без регистрации. */
 const DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const DEPTS=['ИКиМ','ИПиС','ПО и СПА','ЭУиК'];
 const $=id=>document.getElementById(id);
 const STORE='moi-pary-weeks-v6';
 const CATALOG={"ИКиМ":["ДЗ-24-11-1","ДЗ-24-11-2*","ДЗ-24-9-1*","ДЗ-25-11-1","ДЗ-25-11-2","ДЗ-25-9-1","ДЗ-26-11-1","ДЗ-26-11-2","ДЗ-26-9-1","ДЗ-26-9-2","ДЗ-26-9-3","ДПИ-26-9-1","ИФ-24-9-1","ИФ-25-11-1","ИФ-25-9-1","ИФ-26-11-1","ИФ-26-9-1","ИФ-26-9-2","КМТ-24-9-1*","КМТ-24-9-2","КМТ-25-11-1","КМТ-25-9-1","КМТ-26-11-1","КМТ-26-9-1","КМТ-26-9-2","МИШ-25-9-1","МИШ-25-9-2","МИШ-26-11-1","МИШ-26-9-1","МИШ-26-9-2","ОШП-26-9-1","ОШП-26-9-2","ТИК(ПИ)-24-9-3","ТИК(ПИ)-25-11-2","ТИК(ПИ)-25-9-2","ТИК(ПИ)-25-9-3","ТИК(ПИ)-26-11-2","ТИК(ПИ)-26-9-2","ТИК(ЭК)-24-9-1*","ТИК(ЭК)-24-9-2","ТИК(ЭК)-25-11-1","ТИК(ЭК)-25-9-1","ТИК(ЭК)-25-9-4","ТИК(ЭК)-26-11-1","ТИК(ЭК)-26-9-1","ТИК(ЭК)-26-9-3","ХОР-26-9-1"],"ИПиС":["АПП-26-9-1","АПП-26-9-2","АПП-26-9-3","МФС-25-9-1","МФС-26-11-1","МФС-26-9-1","ОБ-25-9-1","ОБ-26-11-1","ОБ-26-9-1","ОБ-26-9-2","ОБ-26-9-3","ОБ-26-9-4","ПК-23-9-1**","ПК-24-9-1*","ПК-25-11-1","ПК-25-9-1","ПК-25-9-2","ПК-26-11-1","ПК-26-9-1","ПК-26-9-2","ПК-26-9-3","ПКД-23-9-1","ПКД-24-11-1**","ПКД-24-11-2**","ПКД-24-9-1*","ПКД-24-9-2*","ПКД-24-9-3","ПКД-24-9-4","ПКД-25-11-1","ПКД-25-11-2","ПКД-25-9-1","ПКД-25-9-2","ПКД-26-11-1","ПКД-26-11-2","ПКД-26-11-3","ПКД-26-9-1","ПКД-26-9-2","ТГ(Г)-25-11-1","ТГ(О)-24-9-1*","ТГ(О)-25-11-2","ТГ(О)-25-9-1","ТГ(О)-25-9-2","ТГ(Э)-25-11-3","ТГ-26-11-1","ТГ-26-11-2","ТГ-26-11-3","ТГ-26-9-1"],"ПО и СПА":["КР-25-1","КР-26-1","ОП-25-1","ОП-25-2","ОП-26-1","П(в)Ш-25-1","ПО-25-1","ПШ-25-1","ШП(в)-25-1"],"ЭУиК":["БУ-24-9-1","БУ-24-9-2*","БУ-25-11-1","БУ-25-11-2","БУ-25-9-1","БУ-26-11-1","БУ-26-9-1","БУ-26-9-2","ГР-23-9-1*","ГР-23-9-2*","ГР-24-9-1","ГР-24-9-2","ГР-25-11-1","ГР-25-11-2","ГР-25-9-1","ГР-26-11-1","ГР-26-9-1","ГР-26-9-2","ДП-26-9-1","ДП-26-9-2","ИСП-24-9-1","ПД-26-9-1","ПД-26-9-2","РМ-24-9-1*","РМ-25-11-1","РМ-25-9-1","РМ-25-9-2","РМ-26-11-1","РМ-26-9-1","РМ-26-9-2","СД-24-9-1*","СД-25-11-1","СД-25-9-1","СД-26-11-1","СД-26-9-1","СД-26-9-2","ТД-24-9-1*","ТД-24-9-2*","ТД-25-11-1","ТД-25-11-2","ТД-25-9-1","ТД-26-11-1","ТД-26-11-2","ТД-26-9-1","ТД-26-9-2"]};
 const HOSTED_URL='./data/schedules.json';
+let lastSyncISO='';
 function get(k){try{return localStorage.getItem(k)}catch{return null}}
 function put(k,v){try{localStorage.setItem(k,v)}catch{}}
 function del(k){try{localStorage.removeItem(k)}catch{}}
@@ -267,14 +453,34 @@ function options(){
  dropdown.value=choice;dropdown.disabled=groups.length===0;group=choice;
 }
 function prettyTime(v){if(!v)return 'неизвестно';let t=new Date(v);return Number.isNaN(t.getTime())?'неизвестно':t.toLocaleString('ru-RU',{timeZone:'Asia/Yekaterinburg',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});}
+function renderTrust(d){
+ const indicator=$('trustIndicator');
+ $('trustFile').textContent=d?.file||'Файл ещё не получен';
+ $('trustEdited').textContent=d?.file_modified?prettyTime(d.file_modified)+' (Тюмень)':'—';
+ const checked=lastSyncISO||d?.checked_at||'';
+ $('trustSync').textContent=checked?prettyTime(checked)+' (Тюмень)':'Проверка ожидается';
+ indicator.className='trust-indicator';
+ if(lastCheckType==='error'){
+  indicator.classList.add('bad');indicator.textContent='Проверка недоступна';
+ }else if(!d){
+  indicator.classList.add('warn');indicator.textContent='Расписание не получено';
+ }else if(lastCheckType==='warning' || !lastSyncISO){
+  indicator.classList.add('warn');indicator.textContent='Проверьте актуальность';
+ }else if(lastCheckType==='success'){
+  indicator.classList.add('good');indicator.textContent='Данные загружены';
+ }else{
+  indicator.textContent='Получена копия';
+ }
+}
 function render(){
  showWeekTabs();const d=entry(),g=d?.groups?.[group];
  $('title').textContent='Расписание занятий';$('subtitle').textContent=dep;
  $('groupMarker').textContent=group||'—';
  $('week').textContent=`Неделя ${datesRU(period[selectedWeek].start)} — ${datesRU(addDays(period[selectedWeek].start,5))}`;
  $('sourceName').textContent=d?.file||'данные ещё не получены';
+ renderTrust(d);
  let html='';
- if(!d){html=`<div class="empty">${selectedWeek?'Расписание следующей недели пока не получено. Возможно, его ещё не опубликовали.':'Расписание текущей недели пока не загружено.'}<div style="margin-top:7px;font-size:11px">Нажми «Проверить сейчас» или открой официальный Яндекс Диск.</div></div>`}
+ if(!d){html=`<div class="empty">${selectedWeek?'Расписание следующей недели пока не получено. Возможно, его ещё не опубликовали.':'Расписание текущей недели пока не загружено.'}<div style="margin-top:7px;font-size:11px">Нажми «Проверить обновления» или открой официальный Яндекс Диск.</div></div>`}
  else if(!g){html='<div class="empty">В файле этой недели нет выбранной группы. Попробуй проверить расписание или выбрать другую группу.</div>'}
  else for(let i=0;i<DAYS.length;i++){
   const day=DAYS[i],ls=g.days?.[day]||[],date=datesRU(addDays(period[selectedWeek].start,i));
@@ -294,7 +500,7 @@ function render(){
  if(d?.quality==='pdf_preview_unverified')status('⚠️ Временная копия из PDF. Кабинеты требуют сверки с XLS.','warning');
  else if(lastCheck)status(lastCheck,lastCheckType);
  else if(d?.checked_at)status(`Сохранённая копия этой недели. Последняя успешная проверка: ${prettyTime(d.checked_at)} (Тюмень). Кабинеты могут измениться.`,'warning');
- else status('Проверяем опубликованное расписание на Яндекс Диске…','warning');
+ else status('Проверяем последние обработанные расписания…','warning');
 }
 function changeDept(){dep=$('dept').value;put('moi-pary-dept',dep);group=get('moi-pary-last-'+dep)||'';lastCheck='';options();render();startRefresh(true)}
 function changeWeek(i){selectedWeek=i;options();render()}
@@ -319,6 +525,7 @@ async function startRefresh(force=false){
   if(!response.ok)throw new Error(response.status===404?'Автоматическая синхронизация пока не подключена (данные на GitHub отсутствуют)':'Сайт вернул HTTP '+response.status);
   let payload;try{payload=await response.json()}catch{throw new Error('Вместо данных получен некорректный ответ')}
   if(payload?.schema!==1||typeof payload.weeks!=='object'||!payload.weeks)throw new Error('Некорректный формат обновления');
+  lastSyncISO=payload.generated_at||'';
   let received=0;
   for(const department of DEPTS){for(const p of period){
    const fresh=payload.weeks[p.key]?.[department];
@@ -330,9 +537,9 @@ async function startRefresh(force=false){
   let notes=[];for(const p of period){const detail=payload.checks?.[p.key]?.[dep];if(detail?.error)notes.push(p.label+': '+String(detail.error).slice(0,110))}
   let latest=payload.generated_at?prettyTime(payload.generated_at):'время неизвестно';
   const stamp=Date.parse(payload.generated_at||''),age=Number.isFinite(stamp)?Date.now()-stamp:Infinity;
-  const stale=age>3*60*60*1000||age< -10*60*1000;
+  const stale=age>7*60*60*1000||age< -10*60*1000;
   if(received){
-    lastCheck=`${stale?'⚠':'✓'} ${stale?'Данные устарели: автоматическая проверка давно не выполнялась':'Данные загружены с сайта'}. Последний запуск синхронизации: ${latest} (Тюмень).`+(notes.length?'\n⚠ '+notes.join('; '):'')+'\nКабинеты уточняются ежедневно; «—» означает, что номер пока не указан.';
+    lastCheck=`${stale?'⚠':'✓'} ${stale?'Опубликованный снимок старше 7 часов — проверьте источник':'Данные загружены с сайта'}. Последний запуск синхронизации: ${latest} (Тюмень).`+(notes.length?'\n⚠ '+notes.join('; '):'')+'\nКабинеты уточняются ежедневно; «—» означает, что номер пока не указан.';
     lastCheckType=stale||notes.length?'warning':'success';
   }else{
     lastCheck=`⚠ Сайт доступен, но актуальные расписания за эти недели ещё не получены. Проверка сервера: ${latest}.`+(notes.length?'\n'+notes.join('; '):'');
@@ -342,7 +549,7 @@ async function startRefresh(force=false){
   lastCheck='⚠ Актуальность НЕ подтверждена: '+String(error.message||error).slice(0,200)+'.\nПоказана только сохранённая копия, если она есть. Проверь официальный Яндекс Диск.';
   lastCheckType='error';
  }finally{
-  busy=false;btn.disabled=false;btn.textContent='↻ Проверить сейчас';options();render();
+  busy=false;btn.disabled=false;btn.textContent='↻ Проверить обновления';options();render();
  }
 }
 options();render();startRefresh(true);
