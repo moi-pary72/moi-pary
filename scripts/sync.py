@@ -1,8 +1,9 @@
 """Prepare current and next week timetables for GitHub Pages.
 
-Only normalized JSON is written to data/schedules.json, never source Excel files.
-The official files are downloaded temporarily into the runner and discarded.
-Runs without non-stdlib packages. Error preserves the last verified JSON for the same week.
+Only download XLS when public Yandex Disk metadata changes (with a daily deep
+verification fallback). A tiny sync-status.json is published every ~30 minutes
+so the site can distinguish source checks from visitors refreshing the page.
+No source XLS is committed; errors keep the last known week.
 """
 from __future__ import annotations
 import datetime as dt
@@ -19,6 +20,9 @@ API='https://cloud-api.yandex.net/v1/disk/public/resources'
 PUBLIC='https://disk.yandex.ru/d/Xc08g8WbTavdHQ'
 ROOT=Path(__file__).resolve().parents[1]
 OUT=ROOT/'data'/'schedules.json'
+STATUS=ROOT/'data'/'sync-status.json'
+STATUS_INTERVAL=dt.timedelta(minutes=30)
+DEEP_VERIFY_INTERVAL=dt.timedelta(hours=24)
 TZ=dt.timezone(dt.timedelta(hours=5))
 DEPTS={'ИКиМ':('ИКИМ',),'ИПиС':('ИПИС',),'ПО и СПА':('ПОИСПА','ПОСПА'),'ЭУиК':('ЭУИК',)}
 RE_DATE=re.compile(r'(\d{1,2})[.\-](\d{1,2})\s*[-–—]\s*(\d{1,2})[.\-](\d{1,2})')
@@ -80,14 +84,41 @@ def file_for_department(items,dept):
         if norm(name[:-4]) in DEPTS[dept]:matches.append(x)
     return max(matches,key=lambda x:x.get('modified','')) if matches else None
 
-def download(dept,week_start,items,folder,folder_name):
-    doc=file_for_department(items,dept)
-    if not doc:return None, 'В папке нет файла XLS этого отделения'
+def file_metadata(doc):
+    """Metadata provided by the official Yandex API; no file is downloaded."""
+    # If Yandex provides no modification/fingerprint data, we must download.
+    meta={key:doc.get(key) for key in ('modified','size','md5') if doc.get(key) is not None}
+    return meta
+
+def previously_verified(previous, week_start, doc):
+    """True when we can safely reuse parsed XLS without downloading it."""
+    if not isinstance(previous,dict) or not previous.get('groups'):
+        return False
+    if previous.get('file')!=doc.get('name'):
+        return False
+    meta=file_metadata(doc)
+    if not meta or not (meta.get('modified') or meta.get('md5')):
+        return False
+    if previous.get('source_meta')!=meta:
+        return False
+    try:
+        dates=previous['dates']
+        first=dt.datetime.strptime(dates[0],'%d.%m.%y').date()
+        verified=dt.datetime.fromisoformat(previous['checked_at'].replace('Z','+00:00'))
+        if first!=week_start or utc_now()-verified>=DEEP_VERIFY_INTERVAL:
+            return False
+    except (ValueError,TypeError,KeyError,IndexError,AttributeError):
+        return False
+    return True
+
+def download(dept,week_start,doc,folder,folder_name):
     path='/'+('/'.join([folder.strip('/'),doc['name']]) if folder else doc['name'])
     link=get_json(API+'/download',{'public_key':PUBLIC,'path':path}).get('href')
-    if not link or not link.startswith('https://'):raise RuntimeError('Яндекс Диск не выдал ссылку на скачивание')
+    if not link or not link.startswith('https://'):
+        raise RuntimeError('Яндекс Диск не выдал ссылку на скачивание')
     b=request(link)
-    if not b.startswith(bytes.fromhex('d0cf11e0a1b11ae1')):raise ValueError('Файл уже не является XLS (формат изменился)')
+    if not b.startswith(bytes.fromhex('d0cf11e0a1b11ae1')):
+        raise ValueError('Файл уже не является XLS (формат изменился)')
     with tempfile.NamedTemporaryFile(suffix='.xls') as temp:
         temp.write(b);temp.flush()
         parsed=parse_xls(temp.name)
@@ -95,70 +126,77 @@ def download(dept,week_start,items,folder,folder_name):
     start=dt.datetime.strptime(parsed['dates'][0],'%d.%m.%y').date()
     if start!=week_start:raise ValueError('Даты в Excel не совпадают с датой недельной папки')
     if not parsed['groups']:raise ValueError('В XLS не обнаружены учебные группы')
-    # Important: only files officially provided by college; missing rooms are left blank.
-    data={**parsed,'file':doc['name'],'department':dept,'week':folder_name,
-          'source':PUBLIC,'file_modified':doc.get('modified'),'checked_at':iso_now()}
-    return data,None
+    return {**parsed,'file':doc['name'],'department':dept,'week':folder_name,
+            'source':PUBLIC,'file_modified':doc.get('modified'),
+            'source_meta':file_metadata(doc),'checked_at':iso_now()}
+
+def read_json(path):
+    try:return json.loads(path.read_text(encoding='utf-8'))
+    except (OSError,ValueError):return {}
+
+def written_at(value):
+    try:return dt.datetime.fromisoformat(value.replace('Z','+00:00'))
+    except (ValueError,AttributeError,TypeError):return None
 
 def sync():
     now=local_today();keys=[this_monday(now)+dt.timedelta(days=d) for d in (0,7)]
-    prior={}
-    if OUT.exists():
-        try:prior=json.loads(OUT.read_text(encoding='utf-8')).get('weeks',{})
-        except Exception:pass
-    result={'schema':1,'generated_at':iso_now(),'weeks':{},'checks':{}}
+    previous_data=read_json(OUT)
+    prior=previous_data.get('weeks',{})
+    stamp=iso_now()
+    result={'schema':1,'generated_at':stamp,'weeks':{},'checks':{}}
+    # 1 root metadata call, then 1 call per available week folder.
     root=listing()
     folders=[(folder_start(f.get('name',''),now),f) for f in root if f.get('type')=='dir']
     folders=[(date,f) for date,f in folders if date]
     lists={}
+    downloaded=0;reused=0
     for week in keys:
         key=week.isoformat();result['weeks'][key]={};result['checks'][key]={}
         folder=next((f for d,f in folders if d==week),None)
         if folder:
             path='/'+folder['name'].strip('/')
             try:files=listing(path);lists[key]=(files,path,folder['name'])
-            except Exception as e:lists[key]=([],path,str(e)[:125])
+            except Exception as e:lists[key]=([],path,'Ошибка папки: '+str(e)[:110])
         else:
             lists[key]=(root,'','корень публичной папки')
         for dep in DEPTS:
             files,path,folder_name=lists[key]
+            previous=prior.get(key,{}).get(dep)
             try:
-                if not folder and not file_for_department(root,dep):
-                    raise FileNotFoundError('Неделя ещё не опубликована')
-                data,error=download(dep,week,files,path,folder_name)
-                if error:raise FileNotFoundError(error)
-                previous=prior.get(key,{}).get(dep)
-                # Avoid creating commits every 30 min if official Excel has not changed.
-                if (previous and previous.get('file_modified')==data.get('file_modified')
-                      and previous.get('groups')==data.get('groups')
-                      and previous.get('dates')==data.get('dates')):
-                    data=previous
+                doc=file_for_department(files,dep)
+                if not doc:raise FileNotFoundError('Неделя ещё не опубликована' if not folder else 'В папке нет XLS отделения')
+                if previously_verified(previous,week,doc):
+                    data=previous;reused+=1
+                else:
+                    data=download(dep,week,doc,path,folder_name);downloaded+=1
                 result['weeks'][key][dep]=data
                 result['checks'][key][dep]={'ok':True}
             except Exception as e:
                 error=str(e)[:170]
                 result['checks'][key][dep]={'ok':False,'error':error}
-                previous=prior.get(key,{}).get(dep)
+                # Never replace a valid week with empty data on a transient failure.
                 if previous and previous.get('groups') and previous.get('dates'):
                     try:
-                        start=dt.datetime.strptime(previous['dates'][0],'%d.%m.%y').date()
-                        if start==week:result['weeks'][key][dep]=previous
+                        first=dt.datetime.strptime(previous['dates'][0],'%d.%m.%y').date()
+                        if first==week:result['weeks'][key][dep]=previous
                     except (ValueError,TypeError):pass
     OUT.parent.mkdir(parents=True,exist_ok=True)
-    # For a normal 30-minute check, avoid writing almost-identical snapshots unless at
-    # least 6 hours passed. Any real change in groups/source or error status writes now.
-    previous_data={}
-    if OUT.exists():
-        try:previous_data=json.loads(OUT.read_text(encoding='utf-8'))
-        except Exception:pass
-    comparable=lambda x: {'weeks':x.get('weeks'), 'checks':x.get('checks')}
-    if comparable(previous_data)==comparable(result):
-        try:
-            earlier=dt.datetime.fromisoformat(previous_data['generated_at'].replace('Z','+00:00'))
-            if utc_now()-earlier<dt.timedelta(hours=6):
-                print('No changed timetable; retaining last published data');return
-        except Exception:pass
-    OUT.write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
-    print('Data written; '+', '.join(f'{week}: {len(result["weeks"][week])} departments' for week in result['weeks']))
+    comparable=lambda x:{'weeks':x.get('weeks'), 'checks':x.get('checks')}
+    changed=comparable(previous_data)!=comparable(result)
+    if changed:
+        OUT.write_text(json.dumps(result,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
+    # A small verification stamp is committed only every 30 minutes or on
+    # actual data change. This prevents 12 GitHub Pages rebuilds per hour.
+    last_status=read_json(STATUS)
+    prev_status_time=written_at(last_status.get('checked_at'))
+    status_due=not prev_status_time or utc_now()-prev_status_time>=STATUS_INTERVAL
+    if changed or status_due:
+        current_key=keys[0].isoformat()
+        state={'schema':1,'checked_at':stamp,'current_week':current_key,
+               'current_week_departments':{
+                  dep:bool(result['checks'][current_key][dep].get('ok')) for dep in DEPTS}}
+        STATUS.write_text(json.dumps(state,ensure_ascii=False,separators=(',',':'))+'\n',encoding='utf-8')
+    print(f'Checked official XLS metadata: downloaded={downloaded}, reused={reused}, '
+          f'data_changed={changed}, status_published={changed or status_due}')
 
 if __name__=='__main__':sync()
