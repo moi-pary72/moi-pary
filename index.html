@@ -332,6 +332,98 @@ button{min-height:49px;border-radius:9px;font-weight:740}
  .day .number,.day .time,.day .subject,.day .teacher,.day .room{grid-column:auto!important;grid-row:auto!important;margin:0!important}
  .paper .day-title{color:#000!important;background:#eee!important;border-left:0!important}
 }
+
+/* v7.1.1 — mobile timetable fix. Legacy table percentage widths were inherited
+   by grid cells; subject and room therefore collapsed into single letters. */
+@media screen and (max-width:700px){
+  .day table, .day tbody {display:block;width:100%;max-width:100%;table-layout:auto}
+  .day thead, .day colgroup {display:none}
+  .day tr {
+    display:grid;
+    width:100%;
+    max-width:100%;
+    box-sizing:border-box;
+    grid-template-columns:minmax(0,1fr) max-content;
+    grid-template-rows:auto auto auto auto;
+    grid-template-areas:
+      "number room"
+      "time room"
+      "subject subject"
+      "teacher teacher";
+    gap:4px 12px;
+    align-items:start;
+    padding:13px 13px 14px;
+    border-bottom:1px solid #e4ebf3;
+    background:#fff;
+  }
+  .day tr:nth-child(even){background:#f9fbfe}
+  .day tr:nth-child(even) td{background:transparent}
+  .day td,
+  .day .number,.day .time,.day .subject,.day .teacher,.day .room {
+    width:auto!important;
+    max-width:100%!important;
+    min-width:0!important;
+    margin:0;
+    border:0!important;
+    padding:0!important;
+    background:transparent!important;
+    overflow-wrap:break-word!important;
+    word-break:normal!important;
+    line-height:1.42;
+  }
+  .day .number {grid-area:number;font-size:11px;color:#52759c;font-weight:750}
+  .day .number::before{content:'Пара ';font-weight:500;color:#7990a7}
+  .day .time {grid-area:time;font-size:12px;font-weight:650;color:#335a83;white-space:normal!important}
+  .day .time .time-start,.day .time .time-end{display:inline!important;white-space:nowrap!important}
+  .day .subject {
+    grid-area:subject;
+    font-size:15px!important;
+    font-weight:750;
+    color:#1e3d5e;
+    letter-spacing:-.012em;
+    margin-top:8px!important;
+  }
+  .day .teacher {
+    grid-area:teacher;
+    font-size:12px!important;
+    color:#64788c;
+    margin-top:3px!important;
+    line-height:1.46;
+  }
+  .day .teacher::before{content:'Преподаватель: ';color:#8192a5}
+  .day .room {
+    grid-area:room;
+    justify-self:end;
+    align-self:center;
+    text-align:right;
+    white-space:nowrap!important;
+    overflow-wrap:normal!important;
+    word-break:keep-all!important;
+    font-size:12px!important;
+    font-weight:750;
+  }
+  .day .room .room-value {
+    display:inline-block;
+    box-sizing:border-box;
+    max-width:none;
+    width:auto;
+    border:1px solid #d7e6f7;
+    background:#eaf3ff;
+    color:#235b9a;
+    border-radius:7px;
+    padding:6px 9px;
+    white-space:nowrap!important;
+    font-size:12px!important;
+    letter-spacing:0;
+  }
+  .day .room .room-dash{font-size:17px}
+  .day .subject,.day .teacher {hyphens:none}
+}
+@media screen and (max-width:350px){
+  .day tr{grid-template-columns:minmax(0,1fr) max-content;gap:4px 7px;padding:11px 9px 12px}
+  .day .subject{font-size:14px!important}
+  .day .room .room-value{padding:5px 7px;font-size:11px!important}
+}
 </style></head><body>
 <div class="wrap">
  <header class="brand" aria-label="Мои пары 72 — студенческий сервис">
@@ -390,7 +482,7 @@ button{min-height:49px;border-radius:9px;font-weight:740}
 </div>
 <script>
 'use strict';
-/* «Мои пары 72» v7.1: текущая и следующая недели, данные GitHub Actions, без регистрации. */
+/* «Мои пары 72» v7.1.1: текущая и следующая недели, данные GitHub Actions, без регистрации. */
 const DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота'];
 const DEPTS=['ИКиМ','ИПиС','ПО и СПА','ЭУиК'];
 const $=id=>document.getElementById(id);
