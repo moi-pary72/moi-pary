@@ -1,0 +1,42 @@
+
+name: Refresh timetables from Yandex Disk
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: timetable-sync
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download and parse public weekly Excel files
+        run: python scripts/sync.py
+
+      - name: Commit current and next week only (normalized JSON)
+        run: |
+          git add data/schedules.json
+          if git diff --cached --quiet; then
+            echo 'No changes'
+            exit 0
+          fi
+          git config user.name 'moi-pary-sync[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Update current and next week timetables'
+          git push
