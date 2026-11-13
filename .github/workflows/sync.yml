@@ -31,7 +31,7 @@ jobs:
 
       - name: Commit current and next week only (normalized JSON)
         run: |
-          git add data/schedules.json
+          git add data/schedules.json data/sync-status.json
           if git diff --cached --quiet; then
             echo 'No changes'
             exit 0
