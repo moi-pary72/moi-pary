@@ -3,7 +3,7 @@ name: Refresh timetables from Yandex Disk
 
 on:
   schedule:
-    - cron: '*/30 * * * *'
+- cron: '7,37 * * * *'
   workflow_dispatch:
 
 permissions:
