@@ -90,8 +90,8 @@ button,select{font:inherit}button{cursor:pointer;touch-action:manipulation}butto
   <div class="days-layout" id="days"></div>
   <div class="actions"><button type="button" class="btn refresh" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.8 9a7.5 7.5 0 0 1 12.9-1.3L20 12M4 12l1.3 4.3A7.5 7.5 0 0 0 18.4 15"/></svg><span id="refreshLabel">Проверить обновления</span></button><button type="button" class="btn print" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg><span>Печать / PDF</span></button></div>
   <div class="trust-bar"><span id="trustIndicator" class="health">Проверяем</span><span class="sync-time">Сайт проверен: <strong id="trustSeen">—</strong></span><span class="sync-time">Версия данных: <strong id="trustSync">—</strong></span>
-   <details class="more" id="sourceDetails"><summary>Источник и подробности</summary><div class="more-body"><p id="status" class="status" role="status" aria-live="polite">Проверяем расписание…</p><p>Автопроверка Яндекс Диска: <strong id="sourceVerified">—</strong>. Она выполняется отдельно от кнопки на сайте, с возможными задержками GitHub.</p><p>Файл: <strong id="trustFile">—</strong> · Изменён: <strong id="trustEdited">—</strong></p><p><a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">Официально опубликованные файлы на Яндекс Диске</a> · <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></p></div></details></div>
-  <p class="print-note">«—» означает, что кабинет пока не указан. Кабинеты могут уточняться ежедневно.</p><div class="paper-foot"><span>Источник: <span id="sourceName">—</span></span></div>
+   <details class="more" id="sourceDetails"><summary>Источник и подробности</summary><div class="more-body"><p id="status" class="status" role="status" aria-live="polite">Проверяем расписание…</p><p>Последняя успешная проверка выбранного расписания: <strong id="sourceVerified">—</strong>. Запланирована примерно каждые 30 минут; GitHub может задерживать или пропускать запуски. Кнопка проверяет опубликованную копию.</p><p>Файл: <strong id="trustFile">—</strong> · Изменён: <strong id="trustEdited">—</strong></p><p><a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">Официально опубликованные файлы на Яндекс Диске</a> · <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></p></div></details></div>
+  <p class="print-note">«Не указан» означает, что кабинет отсутствует в источнике. Кабинеты могут уточняться ежедневно.</p><div class="paper-foot"><span>Источник: <span id="sourceName">—</span></span></div>
  </main>
  <footer class="about"><p><b>Мои пары 72</b> — независимый информационный сервис, не официальный сайт техникума или государственного органа. Проверяйте изменения в исходном расписании.</p><div class="about-links"><a href="https://t.me/Cheloveck4" target="_blank" rel="noopener noreferrer">Telegram разработчика</a><a href="mailto:Chernov-vv2008@yandex.ru">E-mail</a></div></footer><div class="site-bottom">Мои пары 72 · Тюменская область · v7.3.2</div>
 </div><script>
@@ -143,8 +143,21 @@ function prettyTime(v){if(!v)return '—';const t=new Date(v);return Number.isNa
 function showWeekTabs(){for(let i=0;i<2;i++){const w=period[i],b=$(i?'weekNext':'weekCurrent');b.classList.toggle('active',selectedWeek===i);b.setAttribute('aria-pressed',String(selectedWeek===i));$(i?'datesNext':'datesCurrent').textContent=`${dayMonth(w.start)}–${dayMonth(addDays(w.start,5))}`}}
 function showDayTabs(){for(const b of document.querySelectorAll('.day-pick')){const i=Number(b.dataset.day);b.classList.toggle('active',selectedDay===i);b.setAttribute('aria-pressed',String(selectedDay===i));b.querySelector('span').textContent=String(addDays(period[selectedWeek].start,i).getUTCDate()).padStart(2,'0')}}
 function options(){const a=entry(dep,0),b=entry(dep,1);const groups=[...new Set([...(CATALOG[dep]||[]),...Object.keys(a?.groups||{}),...Object.keys(b?.groups||{})])].sort((x,y)=>x.localeCompare(y,'ru',{numeric:true}));const dd=$('group'),preferred=get('moi-pary-last-'+dep)||'';const value=groups.includes(group)?group:groups.includes(preferred)?preferred:(dep==='ИКиМ'&&groups.includes('ДПИ-26-9-1')?'ДПИ-26-9-1':groups[0]||'');dd.innerHTML=groups.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');dd.disabled=!groups.length;dd.value=value;group=value}
+function roomValue(value){
+ const text=String(value??'').trim();
+ if(!text||['.','-','—','nan','inf','infinity'].includes(text.toLowerCase()))return '';
+ if(/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/i.test(text)){
+  const n=Number(text);return Number.isInteger(n)&&n>=1&&n<=9999?String(n):'';
+ }
+ return text;
+}
+function sourceCheckedAt(){
+ const key=period[selectedWeek].key;
+ return sourceMeta?.last_successful_checks?.[key]?.[dep]||
+  (key===sourceMeta?.current_week&&sourceMeta?.current_week_departments?.[dep]?sourceMeta.checked_at:'');
+}
 function sourceVerifiedAge(){
- const t=Date.parse(sourceMeta?.checked_at||'');
+ const t=Date.parse(sourceCheckedAt());
  return Number.isFinite(t)?Date.now()-t:Infinity;
 }
 function renderTrust(d){
@@ -153,12 +166,11 @@ function renderTrust(d){
  const published=lastSyncISO||d?.checked_at||'';
  $('trustSync').textContent=published?prettyTime(published):'—';
  $('trustSeen').textContent=localFetchedAt?prettyTime(localFetchedAt):'—';
- $('sourceVerified').textContent=sourceMeta?.checked_at?prettyTime(sourceMeta.checked_at)+' (Тюмень)':'нет подтверждения';
+ $('sourceVerified').textContent=sourceCheckedAt()?prettyTime(sourceCheckedAt())+' (Тюмень)':'нет подтверждения';
  const indicator=$('trustIndicator');indicator.className='health';
- const sourceOk=sourceMeta?.current_week_departments?.[dep]!==false;
- const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000&&
-    sourceMeta?.current_week===period[0].key;
- const note=statusChecks[period[selectedWeek].key]?.[dep];
+ const sourceOk=(sourceMeta?.checks?.[period[selectedWeek].key]?.[dep]?.ok??sourceMeta?.current_week_departments?.[dep])!==false;
+ const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000;
+ const note=sourceMeta?.checks?.[period[selectedWeek].key]?.[dep]||statusChecks[period[selectedWeek].key]?.[dep];
  if(lastCheckType==='error'){
   indicator.classList.add('bad');indicator.textContent='Сеть недоступна';
  }else if(!d){
@@ -180,8 +192,8 @@ function render(){showWeekTabs();showDayTabs();const headingDate=addDays(period[
    const ls=g.days?.[DAYS[i]]||[],date=addDays(period[selectedWeek].start,i);
    html+=`<section class="day${i===selectedDay?' active-day':''}" id="day${i}" aria-label="${DAYS[i]}"><div class="day-title"><span>${DAYS[i]}</span><time datetime="${dateKey(date)}">${datesRU(date)}</time></div>`;
    if(!ls.length){html+='<div class="empty">Занятий не указано</div></section>';continue}
-   for(const x of ls){const time=String(x.time||'—').replace(/\s*[-–—]\s*/g,'–'),number=x.number==null?'·':esc(x.number),room=x.room?esc(x.room):'—';
-     html+=`<article class="lesson"><div class="lesson-time"><span class="lesson-number">${number==='·'?'Пара ·':`${number} пара`}</span><span class="lesson-clock">${esc(time)}</span></div><div class="lesson-text"><div class="lesson-subject">${esc(x.subject||'—')}</div><div class="lesson-teacher">${esc(x.teacher||'Преподаватель не указан')}</div></div><span class="lesson-room${x.room?'':' unknown'}" aria-label="Кабинет: ${x.room?esc(x.room):'не указан'}">${room}</span></article>`;
+   for(const x of ls){const time=String(x.time||'—').replace(/\s*[-–—]\s*/g,'–'),number=x.number==null?'·':esc(x.number),validRoom=roomValue(x.room),room=validRoom?esc(validRoom):'Не указан';
+     html+=`<article class="lesson"><div class="lesson-time"><span class="lesson-number">${number==='·'?'Пара ·':`${number} пара`}</span><span class="lesson-clock">${esc(time)}</span></div><div class="lesson-text"><div class="lesson-subject">${esc(x.subject||'—')}</div><div class="lesson-teacher">${esc(x.teacher||'Преподаватель не указан')}</div></div><span class="lesson-room${validRoom?'':' unknown'}" aria-label="Кабинет: ${validRoom?esc(validRoom):'не указан'}">${room}</span></article>`;
    }
    html+='</section>';
  }
@@ -278,7 +290,7 @@ async function startRefresh(force=false,mode='auto'){
   }
   const newValidator=response.headers.get('etag')||response.headers.get('last-modified')||'';
   if(newValidator)lastRemoteValidator=newValidator;
-  lastSyncISO=payload.generated_at||'';statusChecks=payload.checks||{};
+  lastSyncISO=payload.last_changed_at||payload.generated_at||'';statusChecks=sourceMeta?.checks||payload.checks||{};
   localFetchedAt=new Date().toISOString();
   let received=0;
   for(const department of DEPTS){for(const w of period){
@@ -290,8 +302,7 @@ async function startRefresh(force=false,mode='auto'){
   prune();
   const notes=[];
   {const w=period[selectedWeek],c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
-  const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000&&
-    sourceMeta?.current_week===period[0].key;
+  const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000;
   const versionChanged=!!(previousVersion&&lastSyncISO&&lastSyncISO!==previousVersion);
   const selectedChanged=beforeDays!==JSON.stringify(entry()?.groups?.[group]?.days||null);
   if(received){
@@ -299,7 +310,7 @@ async function startRefresh(force=false,mode='auto'){
    lastCheck=`Опубликованная копия проверена: ${prettyTime(localFetchedAt)} (Тюмень). `+
      `Версия расписания: ${prettyTime(lastSyncISO)} (Тюмень).`+
      `\nАвтоматическая проверка Яндекс Диска: `+
-     `${sourceMeta?.checked_at?prettyTime(sourceMeta.checked_at)+' (Тюмень)':'нет подтверждения нового запуска'}.`+
+     `${sourceCheckedAt()?prettyTime(sourceCheckedAt())+' (Тюмень)':'нет подтверждения нового запуска'}.`+
      `${notes.length?'\n'+notes.join('; '):''} Кабинеты могут изменяться ежедневно.`;
    if(versionChanged){
     clearWatch();
