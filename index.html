@@ -143,9 +143,16 @@ function prettyTime(v){if(!v)return '—';const t=new Date(v);return Number.isNa
 function showWeekTabs(){for(let i=0;i<2;i++){const w=period[i],b=$(i?'weekNext':'weekCurrent');b.classList.toggle('active',selectedWeek===i);b.setAttribute('aria-pressed',String(selectedWeek===i));$(i?'datesNext':'datesCurrent').textContent=`${dayMonth(w.start)}–${dayMonth(addDays(w.start,5))}`}}
 function showDayTabs(){for(const b of document.querySelectorAll('.day-pick')){const i=Number(b.dataset.day);b.classList.toggle('active',selectedDay===i);b.setAttribute('aria-pressed',String(selectedDay===i));b.querySelector('span').textContent=String(addDays(period[selectedWeek].start,i).getUTCDate()).padStart(2,'0')}}
 function options(){const a=entry(dep,0),b=entry(dep,1);const groups=[...new Set([...(CATALOG[dep]||[]),...Object.keys(a?.groups||{}),...Object.keys(b?.groups||{})])].sort((x,y)=>x.localeCompare(y,'ru',{numeric:true}));const dd=$('group'),preferred=get('moi-pary-last-'+dep)||'';const value=groups.includes(group)?group:groups.includes(preferred)?preferred:(dep==='ИКиМ'&&groups.includes('ДПИ-26-9-1')?'ДПИ-26-9-1':groups[0]||'');dd.innerHTML=groups.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');dd.disabled=!groups.length;dd.value=value;group=value}
+const SOURCE_CHECK_MAX_AGE_MS=90*60*1000;
 function sourceVerifiedAge(){
  const t=Date.parse(sourceMeta?.checked_at||'');
  return Number.isFinite(t)?Date.now()-t:Infinity;
+}
+function sourceCheckIsFresh(){
+ const age=sourceVerifiedAge();
+ return age>=-10*60*1000&&age<SOURCE_CHECK_MAX_AGE_MS&&
+  sourceMeta?.current_week===period[0].key&&
+  sourceMeta?.current_week_departments?.[dep]===true;
 }
 function renderTrust(d){
  $('trustFile').textContent=d?.file||'Не получен';
@@ -156,8 +163,7 @@ function renderTrust(d){
  $('sourceVerified').textContent=sourceMeta?.checked_at?prettyTime(sourceMeta.checked_at)+' (Тюмень)':'нет подтверждения';
  const indicator=$('trustIndicator');indicator.className='health';
  const sourceOk=sourceMeta?.current_week_departments?.[dep]!==false;
- const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000&&
-    sourceMeta?.current_week===period[0].key;
+ const sourceFresh=sourceCheckIsFresh();
  const note=statusChecks[period[selectedWeek].key]?.[dep];
  if(lastCheckType==='error'){
   indicator.classList.add('bad');indicator.textContent='Сеть недоступна';
@@ -290,8 +296,7 @@ async function startRefresh(force=false,mode='auto'){
   prune();
   const notes=[];
   {const w=period[selectedWeek],c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
-  const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000&&
-    sourceMeta?.current_week===period[0].key;
+  const sourceFresh=sourceCheckIsFresh();
   const versionChanged=!!(previousVersion&&lastSyncISO&&lastSyncISO!==previousVersion);
   const selectedChanged=beforeDays!==JSON.stringify(entry()?.groups?.[group]?.days||null);
   if(received){
