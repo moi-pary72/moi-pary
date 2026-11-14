@@ -24,6 +24,11 @@ class ScheduleParserTests(unittest.TestCase):
                 self.assertEqual(lesson['room'], expected)
                 self.assertEqual(lesson['number'], 1)
 
+    def test_numeric_placeholders_are_not_subjects(self):
+        self.assertEqual(seed_builder.clean(0), '')
+        self.assertEqual(seed_builder.clean(301), '')
+        self.assertEqual(seed_builder.clean_room(301), '301')
+
     def test_old_parser_cache_is_rebuilt(self):
         doc = {'name': 'ИКиМ.xls', 'modified': '2026-11-14T01:00:00Z'}
         previous = {'groups': {'test': {}}, 'file': doc['name'],

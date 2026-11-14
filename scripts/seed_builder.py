@@ -3,16 +3,18 @@ Not needed for hosted runtime; examples show the week 09.11-14.11.2026."""
 import json,re,sys,datetime
 from pathlib import Path
 from xls_biff import xls_book
-PARSER_VERSION=2
+PARSER_VERSION=3
 DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота']
 DAY_RE=re.compile(r'(Понедельник|Вторник|Среда|Четверг|Пятница|Пянтица|Суббота)\s+(\d{2}\.\d{2}\.\d{2})',re.I)
 TIME_RE=re.compile(r'(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})')
 
 def clean(val):
- if isinstance(val,str):return re.sub(r'\s+',' ',val).strip()
+ return re.sub(r'\s+',' ',val).strip() if isinstance(val,str) else ''
+
+def clean_room(val):
  if isinstance(val,(int,float)) and not isinstance(val,bool):
   return str(int(val)) if val==int(val) else str(val)
- return ''
+ return clean(val)
 
 def parse_xls(raw_path):
  data={};dates=[]
@@ -35,7 +37,7 @@ def parse_xls(raw_path):
    for c,grp in headers:
     subject=clean(cells.get((r,c)))
     if not subject or subject in ('.','-'):continue
-    teacher=clean(cells.get((r,c+1)));room=clean(cells.get((r,c+2)))
+    teacher=clean(cells.get((r,c+1)));room=clean_room(cells.get((r,c+2)))
     if teacher=='.':teacher=''
     if room=='.':room=''
     dest=data.setdefault(grp,{'days':{day:[] for day in DAYS}})
