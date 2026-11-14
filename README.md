@@ -59,3 +59,8 @@ Workflow `sync.yml` запланирован на 17-ю и 47-ю минуты к
 не переписывайте main и не уничтожайте последующие обновления расписания.
 
 [Отчёт диагностики и сверки](docs/diagnostics-2026-11-14.md).
+
+Опубликованная версия проверена после merge: [PR #2](https://github.com/moi-pary72/moi-pary/pull/2),
+[успешная публикация Pages](https://github.com/moi-pary72/moi-pary/actions/runs/43609120920).
+Воспроизведение браузерной проверки: `python docs/check_site.py URL`
+(опционально: пакет playwright и установленный `/usr/bin/chromium`).
