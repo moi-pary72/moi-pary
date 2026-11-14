@@ -1,9 +1,9 @@
 """Produces verified initial (offline) snapshot from user-provided sample files.
 Not needed for hosted runtime; examples show the week 09.11-14.11.2026."""
-import json,re,sys,datetime
+import json,re,sys,datetime,math
 from pathlib import Path
 from xls_biff import xls_book
-PARSER_VERSION=3
+PARSER_VERSION=4
 DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота']
 DAY_RE=re.compile(r'(Понедельник|Вторник|Среда|Четверг|Пятница|Пянтица|Суббота)\s+(\d{2}\.\d{2}\.\d{2})',re.I)
 TIME_RE=re.compile(r'(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})')
@@ -13,8 +13,14 @@ def clean(val):
 
 def clean_room(val):
  if isinstance(val,(int,float)) and not isinstance(val,bool):
-  return str(int(val)) if val==int(val) else str(val)
- return clean(val)
+  return str(int(val)) if math.isfinite(val) and 1<=val<=9999 and val==int(val) else ''
+ text=clean(val)
+ if text in ('.','-','—'):return ''
+ if re.fullmatch(r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?',text):
+  try:return clean_room(float(text))
+  except (ValueError,OverflowError):return ''
+ if text.lower() in ('nan','inf','infinity','-inf'):return ''
+ return text
 
 def parse_xls(raw_path):
  data={};dates=[]
@@ -41,7 +47,8 @@ def parse_xls(raw_path):
     if teacher=='.':teacher=''
     if room=='.':room=''
     dest=data.setdefault(grp,{'days':{day:[] for day in DAYS}})
-    dest['days'][day].append({'date':date,'number':number,'time':tm,'subject':subject,'teacher':teacher,'room':room})
+    lesson={'date':date,'number':number,'time':tm,'subject':subject,'teacher':teacher,'room':room}
+    if lesson not in dest['days'][day]:dest['days'][day].append(lesson)
  for grp in data:
   if not any(data[grp]['days'].values()):raise ValueError('Пустая группа '+grp)
  return {'groups':data,'dates':dates,'format':'xls'}
