@@ -14,7 +14,7 @@ import tempfile
 import time
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
-from seed_builder import parse_xls
+from seed_builder import parse_xls, PARSER_VERSION
 
 API='https://cloud-api.yandex.net/v1/disk/public/resources'
 PUBLIC='https://disk.yandex.ru/d/Xc08g8WbTavdHQ'
@@ -94,6 +94,8 @@ def previously_verified(previous, week_start, doc):
     """True when we can safely reuse parsed XLS without downloading it."""
     if not isinstance(previous,dict) or not previous.get('groups'):
         return False
+    if previous.get('parser_version')!=PARSER_VERSION:
+        return False
     if previous.get('file')!=doc.get('name'):
         return False
     meta=file_metadata(doc)
@@ -126,7 +128,7 @@ def download(dept,week_start,doc,folder,folder_name):
     start=dt.datetime.strptime(parsed['dates'][0],'%d.%m.%y').date()
     if start!=week_start:raise ValueError('Даты в Excel не совпадают с датой недельной папки')
     if not parsed['groups']:raise ValueError('В XLS не обнаружены учебные группы')
-    return {**parsed,'file':doc['name'],'department':dept,'week':folder_name,
+    return {**parsed,'parser_version':PARSER_VERSION,'file':doc['name'],'department':dept,'week':folder_name,
             'source':PUBLIC,'file_modified':doc.get('modified'),
             'source_meta':file_metadata(doc),'checked_at':iso_now()}
 

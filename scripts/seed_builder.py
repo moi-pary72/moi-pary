@@ -3,12 +3,16 @@ Not needed for hosted runtime; examples show the week 09.11-14.11.2026."""
 import json,re,sys,datetime
 from pathlib import Path
 from xls_biff import xls_book
+PARSER_VERSION=2
 DAYS=['Понедельник','Вторник','Среда','Четверг','Пятница','Суббота']
 DAY_RE=re.compile(r'(Понедельник|Вторник|Среда|Четверг|Пятница|Пянтица|Суббота)\s+(\d{2}\.\d{2}\.\d{2})',re.I)
 TIME_RE=re.compile(r'(\d{1,2}:\d{2})\s*-\s*(\d{1,2}:\d{2})')
 
 def clean(val):
- return re.sub(r'\s+',' ',val).strip() if isinstance(val,str) else ''
+ if isinstance(val,str):return re.sub(r'\s+',' ',val).strip()
+ if isinstance(val,(int,float)) and not isinstance(val,bool):
+  return str(int(val)) if val==int(val) else str(val)
+ return ''
 
 def parse_xls(raw_path):
  data={};dates=[]

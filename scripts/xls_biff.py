@@ -117,7 +117,7 @@ def xls_book(path):
     for k in range((len(d)-6)//6):
      xf,v=struct.unpack_from('<HI',d,4+6*k)
      if v&2:value=((v>>2) if v<0x80000000 else (v>>2)-0x40000000)
-     else:value=struct.unpack('<d',struct.pack('<Q',v & 0xfffffffc))[0]
+     else:value=struct.unpack('<d',struct.pack('<Q',(v & 0xfffffffc)<<32))[0]
      if v&1:value/=100
      cells[(r,c+k)]=value
   sheets.append({'name':name,'cells':cells,'merged':merged,'height':height,'width':width})
