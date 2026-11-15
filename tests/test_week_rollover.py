@@ -62,6 +62,12 @@ class WeekRolloverTests(unittest.TestCase):
         self.assertTrue(status['checks']['2026-11-16']['ИПиС']['ok'])
         self.assertEqual(data['weeks']['2026-11-16']['ИКиМ'],self.data)
 
+    def test_removed_previously_published_future_is_not_pending(self):
+        code,status,data=self.run_day(dt.date(2026,11,15),root=[])
+        self.assertEqual(code,1)
+        self.assertEqual(status['checks']['2026-11-16']['ИКиМ']['state'],'unavailable')
+        self.assertEqual(data['weeks']['2026-11-16'],self.baseline['weeks']['2026-11-16'])
+
     def test_real_download_accepts_root_dates_but_rejects_wrong_folder(self):
         from test_reliability import FIXTURE
         with patch.object(sync,'get_json',return_value={'href':'https://example.test/xls'}),patch.object(sync,'request',return_value=FIXTURE.read_bytes()):

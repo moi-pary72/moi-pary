@@ -250,6 +250,8 @@ def sync(force_download=False):
                         if now>week+dt.timedelta(days=5):
                             result['checks'][key][dep]={'ok':False,'state':'archived','error':'Учебная неделя завершена; файлы убраны из источника'}
                             continue
+                        if week>now and previous:
+                            raise FileNotFoundError('Ранее опубликованная неделя исчезла из источника; сохранена последняя версия')
                         if week>now:
                             result['checks'][key][dep]={'ok':False,'state':'pending','pending':True,'error':'Неделя ещё не опубликована'}
                             continue

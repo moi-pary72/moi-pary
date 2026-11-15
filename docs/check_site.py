@@ -19,8 +19,10 @@ with sync_playwright() as p:
   assert 'Разговоры о важном' in monday[2] and '201/2' in monday[2],monday
   assert '4 пара' in monday[3] and 'Основы безопасности' in monday[3] and '201/2' in monday[3],monday
   assert not page.locator('#print').is_disabled()
+  page.locator('#sourceDetails').evaluate('(e)=>e.open=true')
   actual=page.locator('#trustIndicator').inner_text()
   details=page.locator('#status').inner_text()
+  assert details.startswith('Следующая неделя:'),details
   assert 'Даты в Excel не совпадают' not in details,details
   assert actual in ['Расписание подтверждено','Расписание есть · ждём проверку'],actual
   page.locator('#sourceDetails').evaluate('(e)=>e.open=true')
