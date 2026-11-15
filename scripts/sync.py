@@ -132,8 +132,9 @@ def download(dept,week_start,doc,folder,folder_name):
         parsed=parse_xls(temp.name)
     if not parsed['dates']:raise ValueError('В XLS не обнаружены даты')
     start=dt.datetime.strptime(parsed['dates'][0],'%d.%m.%y').date()
-    if start!=week_start:raise ValueError('Даты в Excel не совпадают с датой недельной папки')
-    validate_schedule(parsed,week_start)
+    if week_start is not None and start!=week_start:
+        raise ValueError('Даты в Excel не совпадают с датой недельной папки')
+    validate_schedule(parsed,start)
     return {**parsed,'parser_version':PARSER_VERSION,'file':doc['name'],'department':dept,'week':folder_name,
             'source':PUBLIC,'file_modified':doc.get('modified'),
             'source_meta':file_metadata(doc),'checked_at':iso_now(),
@@ -201,6 +202,21 @@ def sync(force_download=False):
         root_error=None
     except Exception as e:
         root=[];folders=[];root_error=str(e)[:170]
+    # Root files have no week label: inspect their real dates once, never assign
+    # them to the requested week just because its folder is missing.
+    root_data={};root_errors={}
+    if not root_error:
+        for dep in DEPTS:
+            doc=file_for_department(root,dep)
+            if not doc:continue
+            try:
+                cached=next((prior.get(w.isoformat(),{}).get(dep) for w in keys
+                             if not force_download and previously_verified(prior.get(w.isoformat(),{}).get(dep),w,doc)),None)
+                if cached:
+                    root_data[dep]=cached;reused+=1
+                else:
+                    root_data[dep]=download(dep,None,doc,'','корень публичной папки');downloaded+=1
+            except Exception as e:root_errors[dep]=e
     for week in keys:
         key=week.isoformat();result['weeks'][key]={};result['checks'][key]={}
         folder=next((f for d,f in folders if d==week),None)
@@ -211,31 +227,49 @@ def sync(force_download=False):
         except Exception as e:files=[];folder_error=str(e)[:170]
         for dep in DEPTS:
             previous=prior.get(key,{}).get(dep)
+            # Retain a valid last-known copy even for pending/archived states.
+            if previous and previous.get('groups'):
+                try:
+                    validate_schedule(previous,week)
+                    result['weeks'][key][dep]=previous
+                except (ValueError,TypeError,KeyError):pass
             try:
                 if folder_error:raise RuntimeError(folder_error)
-                doc=file_for_department(files,dep)
-                # An unpublished next week is expected; do not download this week's root XLS as next week.
-                if not doc or (week!=keys[0] and not folder):
-                    if week!=keys[0] and not folder and not previous:
-                        result['checks'][key][dep]={'ok':False,'pending':True,'error':'Неделя ещё не опубликована'}
-                        continue
-                    raise FileNotFoundError('В папке нет XLS отделения')
-                if not force_download and previously_verified(previous,week,doc):
-                    data=previous;reused+=1
+                if folder:
+                    doc=file_for_department(files,dep)
+                    if not doc:raise FileNotFoundError('В недельной папке нет XLS отделения')
+                    if not force_download and previously_verified(previous,week,doc):
+                        data=previous;reused+=1
+                    else:
+                        data=download(dep,week,doc,path,folder_name);downloaded+=1
                 else:
-                    data=download(dep,week,doc,path,folder_name)
-                    validate_schedule(data,week,previous);downloaded+=1
+                    if dep in root_errors:raise root_errors[dep]
+                    data=root_data.get(dep)
+                    actual=dt.datetime.strptime(data['dates'][0],'%d.%m.%y').date() if data else None
+                    if actual!=week:
+                        if now>week+dt.timedelta(days=5):
+                            result['checks'][key][dep]={'ok':False,'state':'archived','error':'Учебная неделя завершена; файлы убраны из источника'}
+                            continue
+                        if week>now:
+                            result['checks'][key][dep]={'ok':False,'state':'pending','pending':True,'error':'Неделя ещё не опубликована'}
+                            continue
+                        raise FileNotFoundError('В источнике нет XLS с датами текущей недели')
+                # Both locations may contain the same week. Prefer the newer
+                # official revision, but never hide a broken named-folder XLS.
+                if folder and dep in root_errors:
+                    raise root_errors[dep]
+                candidate=root_data.get(dep)
+                if (candidate and candidate['dates'][0]==week.strftime('%d.%m.%y')
+                        and (candidate.get('file_modified') or '')>(data.get('file_modified') or '')):
+                    data=candidate
+                validate_schedule(data,week,previous)
                 result['weeks'][key][dep]=data
-                result['checks'][key][dep]={'ok':True}
+                result['checks'][key][dep]={'ok':True,'state':'confirmed'}
                 successes.setdefault(key,{})[dep]=stamp
             except Exception as e:
                 error=str(e)[:170];failures.append(f'{key} {dep}: {error}')
-                result['checks'][key][dep]={'ok':False,'error':error}
-                if previous and previous.get('groups') and previous.get('dates'):
-                    try:
-                        if dt.datetime.strptime(previous['dates'][0],'%d.%m.%y').date()==week:
-                            result['weeks'][key][dep]=previous
-                    except (ValueError,TypeError):pass
+                state='unavailable' if isinstance(e,(RuntimeError,FileNotFoundError)) else 'invalid'
+                result['checks'][key][dep]={'ok':False,'state':state,'error':error}
     result['weeks']={key:data for key,data in result['weeks'].items() if data}
     semantic_changed=semantic_weeks(prior)!=semantic_weeks(result['weeks'])
     changed=previous_data.get('weeks')!=result['weeks'] or previous_data.get('checks')!=result['checks']

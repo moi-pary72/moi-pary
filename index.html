@@ -88,7 +88,7 @@ button,select{font:inherit}button{cursor:pointer;touch-action:manipulation}butto
   </div>
   <div class="paper-head"><div><h2 id="title">Расписание занятий</h2><div class="print-org">ГАПОУ ТО «Тюменский техникум индустрии питания, коммерции и сервиса»</div><h3 id="subtitle">—</h3><p class="week-meta" id="week">—</p></div><div class="group-stamp">Группа<strong id="groupMarker">—</strong></div></div>
   <div class="days-layout" id="days"></div>
-  <div class="actions"><button type="button" class="btn refresh" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.8 9a7.5 7.5 0 0 1 12.9-1.3L20 12M4 12l1.3 4.3A7.5 7.5 0 0 0 18.4 15"/></svg><span id="refreshLabel">Проверить обновления</span></button><button type="button" class="btn print" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg><span>Печать / PDF</span></button></div>
+  <div class="actions"><button type="button" class="btn refresh" id="refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M20 7v5h-5M4 17v-5h5"/><path d="M5.8 9a7.5 7.5 0 0 1 12.9-1.3L20 12M4 12l1.3 4.3A7.5 7.5 0 0 0 18.4 15"/></svg><span id="refreshLabel">Обновить копию сайта</span></button><button type="button" class="btn print" id="print"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><path d="M6 14h12v7H6z"/></svg><span>Печать / PDF</span></button></div>
   <div class="trust-bar"><span id="trustIndicator" class="health">Проверяем</span><span class="sync-time">Сайт проверен: <strong id="trustSeen">—</strong></span><span class="sync-time">Версия данных: <strong id="trustSync">—</strong></span>
    <details class="more" id="sourceDetails"><summary>Источник и подробности</summary><div class="more-body"><p id="status" class="status" role="status" aria-live="polite">Проверяем расписание…</p><p>Последняя успешная проверка выбранного расписания: <strong id="sourceVerified">—</strong>. Запланирована примерно каждые 30 минут; GitHub может задерживать или пропускать запуски. Кнопка проверяет опубликованную копию.</p><p>Файл: <strong id="trustFile">—</strong> · Изменён: <strong id="trustEdited">—</strong></p><p><a href="https://disk.yandex.ru/d/Xc08g8WbTavdHQ" target="_blank" rel="noopener noreferrer">Официально опубликованные файлы на Яндекс Диске</a> · <a href="https://mck72.ru/learners/information-on-learning-process/training-schedules/" target="_blank" rel="noopener noreferrer">Сайт техникума</a></p></div></details></div>
   <p class="print-note">«Не указан» означает, что кабинет отсутствует в источнике. Кабинеты могут уточняться ежедневно.</p><div class="paper-foot"><span>Источник: <span id="sourceName">—</span></span></div>
@@ -168,20 +168,36 @@ function renderTrust(d){
  $('trustSeen').textContent=localFetchedAt?prettyTime(localFetchedAt):'—';
  $('sourceVerified').textContent=sourceCheckedAt()?prettyTime(sourceCheckedAt())+' (Тюмень)':'нет подтверждения';
  const indicator=$('trustIndicator');indicator.className='health';
- const sourceOk=(sourceMeta?.checks?.[period[selectedWeek].key]?.[dep]?.ok??sourceMeta?.current_week_departments?.[dep])!==false;
- const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000;
+ const health=selectedHealth(d);
+ indicator.classList.add(health.level);indicator.textContent=health.label;
+}
+function selectedHealth(d){
  const note=sourceMeta?.checks?.[period[selectedWeek].key]?.[dep]||statusChecks[period[selectedWeek].key]?.[dep];
- if(lastCheckType==='error'){
-  indicator.classList.add('bad');indicator.textContent='Сеть недоступна';
- }else if(!d){
-  indicator.classList.add('warn');indicator.textContent='Нет расписания';
- }else if(!sourceOk||note?.ok===false){
-  indicator.classList.add('warn');indicator.textContent='Сбой источника';
- }else if(!sourceFresh){
-  indicator.classList.add('warn');indicator.textContent='Проверка устарела';
- }else{
-  indicator.classList.add('good');indicator.textContent='Данные загружены';
- }
+ if(lastCheckType==='error')return {level:'warn',label:'Копия сайта недоступна'};
+ if(note?.state==='archived')return {level:'warn',label:'Неделя в архиве'};
+ if(note?.state==='pending'||note?.pending)return {level:'warn',label:'Неделя ещё не опубликована'};
+ if(note?.state==='invalid')return {level:'bad',label:'Ошибка файла источника'};
+ if(note?.ok===false)return {level:'warn',label:'Источник недоступен'};
+ if(!d)return {level:'warn',label:'Нет расписания'};
+ if(d.quality==='pdf_preview_unverified')return {level:'warn',label:'Копия PDF требует сверки'};
+ if(!sourceCheckedAt())return {level:'warn',label:'Нет подтверждения проверки'};
+ if(sourceVerifiedAge()>=40*60*1000||sourceVerifiedAge()<-10*60*1000)
+  return {level:'warn',label:'Расписание есть · ждём проверку'};
+ return {level:'good',label:'Расписание подтверждено'};
+}
+function renderSelectedStatus(d){
+ const w=period[selectedWeek],note=sourceMeta?.checks?.[w.key]?.[dep]||statusChecks[w.key]?.[dep];
+ const health=selectedHealth(d);
+ let text=`${w.label}: ${health.label}.`;
+ if(note?.error)text+=' '+note.error+'.';
+ if(d&&note?.ok===false)text+=' Показана последняя корректная сохранённая версия.';
+ if(d&&note?.ok!==false&&health.level!=='good')text+=' Сохранённое расписание доступно; новых изменений в источнике пока не подтверждено.';
+ text+=`\nПоследняя успешная проверка этого отделения и недели: ${sourceCheckedAt()?prettyTime(sourceCheckedAt())+' (Тюмень)':'нет подтверждения'}.`;
+ text+=`\nПоследняя попытка проверки источника: ${sourceMeta?.last_attempt_at?prettyTime(sourceMeta.last_attempt_at)+' (Тюмень)':'нет сведений'}.`;
+ text+=`\nКопия сайта получена: ${localFetchedAt?prettyTime(localFetchedAt)+' (Тюмень)':'используется кэш устройства'}. Версия расписания: ${prettyTime(lastSyncISO)} (Тюмень).`;
+ if(lastCheckType==='error')text+='\n'+lastCheck;
+ text+='\nКнопка обновляет опубликованную копию сайта и не запускает проверку Яндекс Диска. Кабинеты могут меняться ежедневно.';
+ status(text,health.level==='good'?'success':health.level==='bad'?'error':'warning');
 }
 
 function render(){showWeekTabs();showDayTabs();const headingDate=addDays(period[selectedWeek].start,selectedDay);$('dayHeading').textContent=DAYS[selectedDay]+', '+datesRU(headingDate);const d=entry(),g=d?.groups?.[group];$('title').textContent='Расписание занятий';$('subtitle').textContent=dep;$('groupMarker').textContent=group||'—';$('week').textContent=`${datesRU(period[selectedWeek].start)} — ${datesRU(addDays(period[selectedWeek].start,5))}`;$('sourceName').textContent=d?.file||'данные не получены';renderTrust(d);
@@ -199,10 +215,7 @@ function render(){showWeekTabs();showDayTabs();const headingDate=addDays(period[
  }
  $('days').innerHTML=html;
  $('print').disabled=!g;$('print').title=g?'Сохранить все дни недели в PDF или распечатать':'Печать доступна после получения расписания';
- if(d?.quality==='pdf_preview_unverified')status('Временная копия из PDF, кабинеты требуют сверки с XLS.','warning');
- else if(lastCheck)status(lastCheck,lastCheckType);
- else if(d?.checked_at)status(`Сохранённая копия недели, последняя успешная проверка: ${prettyTime(d.checked_at)} (Тюмень). Кабинеты могут меняться.`,'warning');
- else status('Ожидаем проверку расписания…');
+ renderSelectedStatus(d);
 }
 function changeDept(){dep=$('dept').value;put('moi-pary-dept',dep);group=get('moi-pary-last-'+dep)||'';lastCheck='';options();render();startRefresh(true)}
 function changeWeek(i){selectedWeek=i;selectedDay=i?0:dayForToday();options();render()}
@@ -264,7 +277,6 @@ async function startRefresh(force=false,mode='auto'){
  const now=Date.now();if(!force&&now-lastAttempt<60*1000)return;
  rollover();lastAttempt=now;
  const previousVersion=lastSyncISO;
- const beforeDays=JSON.stringify(entry()?.groups?.[group]?.days||null);
  const b=$('refresh');busy=true;b.disabled=true;
  $('refreshLabel').textContent='Проверяем…';
  if(mode!=='watch'){
@@ -292,45 +304,22 @@ async function startRefresh(force=false,mode='auto'){
   if(newValidator)lastRemoteValidator=newValidator;
   lastSyncISO=payload.last_changed_at||payload.generated_at||'';statusChecks=sourceMeta?.checks||payload.checks||{};
   localFetchedAt=new Date().toISOString();
-  let received=0;
   for(const department of DEPTS){for(const w of period){
    const fresh=payload.weeks[w.key]?.[department];
    if(fresh&&safeCache(fresh)&&cacheKey(fresh)===w.key&&Object.keys(fresh.groups||{}).length){
-    (weekData[department]??={})[w.key]=fresh;received++;
+    (weekData[department]??={})[w.key]=fresh;
    }
   }}
   prune();
-  const notes=[];
-  {const w=period[selectedWeek],c=statusChecks[w.key]?.[dep];if(c?.error)notes.push(`${w.label}: ${String(c.error).slice(0,110)}`)}
-  const sourceFresh=sourceVerifiedAge()<40*60*1000&&sourceVerifiedAge()>-10*60*1000;
-  const versionChanged=!!(previousVersion&&lastSyncISO&&lastSyncISO!==previousVersion);
-  const selectedChanged=beforeDays!==JSON.stringify(entry()?.groups?.[group]?.days||null);
-  if(received){
-   lastCheckType=!sourceFresh||notes.length?'warning':'success';
-   lastCheck=`Опубликованная копия проверена: ${prettyTime(localFetchedAt)} (Тюмень). `+
-     `Версия расписания: ${prettyTime(lastSyncISO)} (Тюмень).`+
-     `\nАвтоматическая проверка Яндекс Диска: `+
-     `${sourceCheckedAt()?prettyTime(sourceCheckedAt())+' (Тюмень)':'нет подтверждения нового запуска'}.`+
-     `${notes.length?'\n'+notes.join('; '):''} Кабинеты могут изменяться ежедневно.`;
-   if(versionChanged){
-    clearWatch();
-    lastCheck=`${selectedChanged?'✓ Изменения в расписании отображены без перезагрузки.':'✓ Получена новая версия; для выбранной группы изменений нет.'}\n`+lastCheck;
-   }else if(mode==='manual'&&previousVersion){
-    startWatch();
-    lastCheck+='\nЕсли GitHub ещё публикует изменения, страница подхватит их самостоятельно в течение двух минут.';
-   }
-  }else{
-   lastCheckType='warning';
-   lastCheck=`Расписание выбранных недель пока не получено. `+
-    `Проверена опубликованная копия: ${prettyTime(localFetchedAt)} (Тюмень).`+
-    (notes.length?'\n'+notes.join('; '):'');
-  }
+  lastCheckType='';lastCheck='';
+  if(previousVersion&&lastSyncISO!==previousVersion)clearWatch();
+  else if(mode==='manual'&&previousVersion)startWatch();
  }catch(err){
   lastCheckType='error';
   lastCheck='Не удалось проверить опубликованное расписание: '+
    String(err.message||err).slice(0,170)+'. Показана последняя сохранённая копия, если она есть.';
  }finally{
-  busy=false;b.disabled=false;$('refreshLabel').textContent='Проверить обновления';options();render();
+  busy=false;b.disabled=false;$('refreshLabel').textContent='Обновить копию сайта';options();render();
  }
 }
 
