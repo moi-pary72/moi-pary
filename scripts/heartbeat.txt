@@ -1,2 +1,2 @@
-2026-11-17T02:01:00+05:00 Asia/Yekaterinburg
-Reason: current-week checked_at 2026-11-16T18:20:45Z is over 150 minutes old; trigger fresh-main sync.yml via scripts/** push. No source errors reported.
+2026-11-17T04:21:54+05:00 Asia/Yekaterinburg
+Reason: current-week checked_at 2026-11-16T21:01:42Z is 140 minutes old; run fresh main sync.yml via scripts/** push. errors=[]; no old jobs rerun.
