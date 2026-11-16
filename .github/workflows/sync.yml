@@ -21,6 +21,11 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Rerunning an older Actions job must use the latest main,
+          # not the original event SHA (otherwise git push is rejected).
+          ref: main
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
@@ -42,7 +47,15 @@ jobs:
           git config user.name 'moi-pary-sync[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git commit -m 'Update verified timetables and check status'
-          git push
+          # Other automation or an editor may have advanced main while
+          # we were checking the source. Never force-push stale data.
+          git fetch origin main
+          if ! git rebase origin/main; then
+            git rebase --abort || true
+            echo 'Main changed during the check; preserving remote data. Retry from fresh main.' >&2
+            exit 1
+          fi
+          git push origin HEAD:main
           echo 'changed=true' >> "$GITHUB_OUTPUT"
       # GITHUB_TOKEN pushes do not reliably trigger branch-based Pages builds.
       # Explicitly request the existing Pages build rather than changing hosting mode.
