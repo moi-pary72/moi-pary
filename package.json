@@ -1,0 +1,7 @@
+{
+  "name": "moi-pary-cloudflare-monitor",
+  "private": true,
+  "type": "module",
+  "scripts": {"test": "node --test cloudflare/worker.test.mjs", "deploy":"wrangler deploy"},
+  "devDependencies": {"wrangler":"^4.0.0"}
+}
