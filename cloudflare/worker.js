@@ -1,4 +1,6 @@
-/** Independent timetable freshness monitor; never edits timetable data itself. */
+/** Independent timetable freshness monitor; never edits timetable data itself.
+ * Git-connected Cloudflare production deployment: moi-pary-monitor.
+ */
 const REPO = 'moi-pary72/moi-pary';
 const BASE = `https://api.github.com/repos/${REPO}`;
 const STATUS_URL = `https://raw.githubusercontent.com/${REPO}/main/data/sync-status.json`;
