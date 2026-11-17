@@ -1,2 +1,2 @@
-2026-11-17T04:21:54+05:00 Asia/Yekaterinburg
-Reason: current-week checked_at 2026-11-16T21:01:42Z is 140 minutes old; run fresh main sync.yml via scripts/** push. errors=[]; no old jobs rerun.
+2026-11-17T07:18:01+05:00 Asia/Yekaterinburg
+Reason: checked_at 2026-11-17T00:30:14Z is 107 minutes old; independent fresh-main sync via scripts/** push. errors=[]; do not rerun old workflow jobs.
